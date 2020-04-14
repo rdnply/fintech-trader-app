@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"cw1/internal/db"
+	"cw1/internal/session"
 	"cw1/internal/user"
 	"encoding/hex"
 	"encoding/json"
@@ -113,5 +114,10 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		bearer := "Bearer " + token
 		w.Header().Add("Authorization", bearer)
 		w.WriteHeader(http.StatusOK)
+
+		err = session.AddSession(token, fromDB.ID)
+		if err != nil {
+			fmt.Printf("can't create session: %v", err)
+		}
 	}
 }
