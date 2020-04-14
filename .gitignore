@@ -1,5 +1,8 @@
 *.csv
+*.txt
 *.json
+*.sql
+*.exe
 
 .DS_Store
 *.[56789ao]
