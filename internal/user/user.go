@@ -11,9 +11,9 @@ type BirthdayDate struct {
 
 type User struct {
 	ID        int
-	FirstName string       `json:"first_name"`
-	LastName  string       `json:"last_name"`
-	Birthday  BirthdayDate `json:"birthday"`
+	FirstName string       `json:"first_name,omitempty"`
+	LastName  string       `json:"last_name,omitempty"`
+	Birthday  BirthdayDate `json:"birthday,omitempty"`
 	Email     string       `json:"email"`
 	Password  string       `json:"password"`
 	UpdatedAt time.Time
@@ -26,7 +26,7 @@ func (b *BirthdayDate) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	const layout = `"`+"2006-01-02"+`"`
+	const layout = `"` + "2006-01-02" + `"`
 	t, err := time.Parse(layout, s)
 	if err != nil {
 		return fmt.Errorf("can't parse birth date string: %v", err)
@@ -35,5 +35,3 @@ func (b *BirthdayDate) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
-
