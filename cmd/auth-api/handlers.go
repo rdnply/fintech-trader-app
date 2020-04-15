@@ -18,12 +18,12 @@ import (
 )
 
 var (
-	r chi.Router
+	router chi.Router
 )
 
 func init() {
-	r = chi.NewRouter()
-	r.Route("/api/v1", func(r chi.Router) {
+	router = chi.NewRouter()
+	router.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", signUp)
 		r.Post("/signin", signIn)
 		r.Put("/users/{id}", updateUser)
@@ -206,7 +206,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	s, ok := session.GetSession(id)
 	if ok && tokenFromReq == s.SessionID {
 		db := db.GetDBConn()
-		
+
 		var u user.User
 		db.Where("id = ?", id).First(&u)
 
