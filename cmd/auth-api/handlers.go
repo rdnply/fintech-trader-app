@@ -48,11 +48,13 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getCurrentTime()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	//t, err := getCurrentTime()
+	//if err != nil {
+	//	http.Error(w, err.Error(), http.StatusBadRequest)
+	//	return
+	//}
+	t := user.JSONTime{time.Now()}
+
 	u.CreatedAt = t
 	u.UpdatedAt = t
 	u.Password = generateHash(u.Password)
@@ -164,23 +166,27 @@ func update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		t, err := getCurrentTime()
-		if err != nil {
-			fmt.Printf("can't update time: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		//t, err := getCurrentTime()
+		//if err != nil {
+		//	fmt.Printf("can't update time: %v", err)
+		//	http.Error(w, err.Error(), http.StatusBadRequest)
+		//	return
+		//}
+
+		t := user.JSONTime{time.Now()}
 
 		u.ID = id
 		u.UpdatedAt = t
 		u.Password = generateHash(u.Password)
-		
+		fmt.Println(t)
 		db.Save(&u)
 
 		db.Where("id = ?", id).First(&u)
+		fmt.Println(u.CreatedAt)
 		u.Password = ""
 		w.Header().Set("Content-Type", "application/json")
 		json, err := json.Marshal(u)
+		fmt.Println(string(json))
 		if err != nil {
 			fmt.Printf("can't marshal user struct: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
