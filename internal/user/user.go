@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-const TimeLayout = "2006-01-02T15:04:05Z"
 
 type BirthdayDate struct {
 	Date time.Time
@@ -44,7 +43,7 @@ func (b *BirthdayDate) UnmarshalJSON(data []byte) error {
 }
 
 func (t *JSONTime) MarshalJSON() ([]byte, error) {
-	s := t.Format(TimeLayout)
+	s := t.Format(time.RFC3339)
 
 	return []byte(s), nil
 }
@@ -55,12 +54,7 @@ func (jt JSONTime) Value() (driver.Value, error) {
 
 func (jt *JSONTime) Scan(value interface{}) error {
 	jt.Time = value.(time.Time)
-	str := jt.Time.Format(TimeLayout)
-	t, err := time.Parse(TimeLayout, str)
-	if err != nil {
-		return fmt.Errorf("can't parse current time string: %v", err)
-	}
-	jt.Time = t
+
 	return nil
 }
 

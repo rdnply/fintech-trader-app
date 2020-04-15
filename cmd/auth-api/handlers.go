@@ -48,11 +48,6 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//t, err := getCurrentTime()
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusBadRequest)
-	//	return
-	//}
 	t := user.JSONTime{time.Now()}
 
 	u.CreatedAt = t
@@ -166,27 +161,18 @@ func update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//t, err := getCurrentTime()
-		//if err != nil {
-		//	fmt.Printf("can't update time: %v", err)
-		//	http.Error(w, err.Error(), http.StatusBadRequest)
-		//	return
-		//}
-
 		t := user.JSONTime{time.Now()}
 
 		u.ID = id
 		u.UpdatedAt = t
 		u.Password = generateHash(u.Password)
-		fmt.Println(t)
-		db.Save(&u)
 
+		db.Save(&u)
 		db.Where("id = ?", id).First(&u)
-		fmt.Println(u.CreatedAt)
+
 		u.Password = ""
 		w.Header().Set("Content-Type", "application/json")
 		json, err := json.Marshal(u)
-		fmt.Println(string(json))
 		if err != nil {
 			fmt.Printf("can't marshal user struct: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -197,14 +183,4 @@ func update(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
-}
-
-func getCurrentTime() (user.JSONTime, error) {
-	str := time.Now().Format("2006-01-02T15:04:05Z")
-	t, err := time.Parse("2006-01-02T15:04:05Z", str)
-	if err != nil {
-		return user.JSONTime{}, fmt.Errorf("can't parse current time string: %v", err)
-	}
-
-	return user.JSONTime{t}, nil
 }
