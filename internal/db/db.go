@@ -1,7 +1,6 @@
 package db
 
 import (
-	"cw1/internal/user"
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -19,8 +18,6 @@ type Configuration struct {
 	DBNAME   string `json:"db_name"`
 }
 
-
-
 func getConfig(filename string) (string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -33,20 +30,16 @@ func getConfig(filename string) (string, error) {
 		return "", fmt.Errorf("unable to read input json file as a byte array %s, %v", filename, err)
 	}
 
-	var conf []Configuration
+	var c Configuration
 
-	err = json.Unmarshal(byteData, &conf)
+	err = json.Unmarshal(byteData, &c)
 	if err != nil {
 		fmt.Errorf("can't unmarshal json with configuration: %v", err)
 	}
 
-	c := conf[0]
-	fmt.Println(c)
 	str := fmt.Sprintf("host=%s port=%s user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		c.HOST, c.PORT, c.USER, c.PASSWORD, c.DBNAME)
-
-	fmt.Println(str)
 
 	return str, nil
 }
@@ -57,20 +50,15 @@ var (
 )
 
 func Init(filename string) {
-	//conf, err := getConfig(filename)
-	//if err != nil {
-	//	fmt.Errorf("can't get configuration for database: %v", err)
-	//}
-
-	conf := fmt.Sprintf("host=%s port=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		"localhost", "5432", "postgres", "postgres", "tfs_cw")
+	conf, err := getConfig(filename)
+	if err != nil {
+		fmt.Printf("can't get configuration for database: %v", err)
+	}
 
 	db, err = gorm.Open("postgres", conf)
 	if err != nil {
 		log.Fatalf("can't connect to db: %s", err)
 	}
-	db.AutoMigrate(&user.User{})
 }
 
 func GetDBConn() *gorm.DB {

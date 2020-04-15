@@ -18,7 +18,7 @@ func main() {
 	addr := net.JoinHostPort("", "5000")
 	srv := &http.Server{Addr: addr, Handler: router}
 
-	db.Init("configuration.json")
+	db.Init("C:\\Users\\rodion\\go\\src\\cw1\\configuration.json")
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
