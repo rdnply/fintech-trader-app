@@ -27,6 +27,13 @@ type User struct {
 	CreatedAt JSONTime `json:"created_at,omitempty"`
 }
 
+type UserInfo struct {
+	FirstName string   `json:"first_name"`
+	LastName  string   `json:"last_name"`
+	Birthday  BirthDay `json:"birthday,omitempty"`
+	Email     string   `json:"email"`
+}
+
 func (b *BirthDay) UnmarshalJSON(data []byte) error {
 	s := string(data)
 	if s == "null" || s == `""` {

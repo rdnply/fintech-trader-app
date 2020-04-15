@@ -26,7 +26,8 @@ func init() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", signUp)
 		r.Post("/signin", signIn)
-		r.Put("/users/{id}", update)
+		r.Put("/users/{id}", updateUser)
+		r.Get("/users/{id}", getUser)
 	})
 }
 
@@ -131,7 +132,7 @@ func getToken(r *http.Request) string {
 	return s[TokenId]
 }
 
-func update(w http.ResponseWriter, r *http.Request) {
+func updateUser(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
@@ -139,10 +140,8 @@ func update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	str := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(str)
+	id, err := getIDFromParams(r)
 	if err != nil {
-		fmt.Printf("can't parse string to int: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -152,7 +151,6 @@ func update(w http.ResponseWriter, r *http.Request) {
 	s, ok := session.GetSession(id)
 	if ok && tokenFromReq == s.SessionID {
 		db := db.GetDBConn()
-
 
 		var c int
 		db.Model(&user.User{}).Where("email = ? AND id != ?", u.Email, id).Count(&c)
@@ -184,4 +182,51 @@ func update(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func getIDFromParams(r *http.Request) (int, error) {
+	str := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(str)
+	if err != nil {
+		return -1, fmt.Errorf("can't parse string to int for get id from params: %v", err)
+	}
+
+	return id, nil
+}
+
+func getUser(w http.ResponseWriter, r *http.Request) {
+	id, err := getIDFromParams(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tokenFromReq := getToken(r)
+
+	s, ok := session.GetSession(id)
+	if ok && tokenFromReq == s.SessionID {
+		db := db.GetDBConn()
+		
+		var u user.User
+		db.Where("id = ?", id).First(&u)
+
+		info := getUserInfo(&u)
+
+		json, err := json.Marshal(info)
+		if err != nil {
+			fmt.Printf("can't marshal struct with user's info: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
+}
+
+func getUserInfo(u *user.User) user.UserInfo {
+	return user.UserInfo{u.FirstName, u.LastName, u.Birthday, u.Email}
 }
