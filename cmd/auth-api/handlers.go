@@ -153,11 +153,12 @@ func update(w http.ResponseWriter, r *http.Request) {
 	if ok && tokenFromReq == s.SessionID {
 		db := db.GetDBConn()
 
+
 		var c int
-		db.Where("email = ?", u.Email).Count(c)
+		db.Model(&user.User{}).Where("email = ? AND id != ?", u.Email, id).Count(&c)
 		if c != 0 {
 			fmt.Printf("new user info has dublicate email: %v", err)
-			http.Error(w, err.Error(), http.StatusConflict)
+			w.WriteHeader(http.StatusConflict)
 			return
 		}
 
