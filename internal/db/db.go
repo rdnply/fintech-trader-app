@@ -1,6 +1,7 @@
 package db
 
 import (
+	"cw1/internal/user"
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
@@ -69,6 +70,7 @@ func Init(filename string) {
 	if err != nil {
 		log.Fatalf("can't connect to db: %s", err)
 	}
+	db.AutoMigrate(&user.User{})
 }
 
 func GetDBConn() *gorm.DB {
