@@ -43,6 +43,8 @@ func (h *Handler) Routes() chi.Router {
 	return r
 }
 
+const NotExistingID = 0
+
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 
@@ -64,8 +66,6 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	const NotExistingID = 0
 
 	if fromDB.ID == NotExistingID {
 		err = h.userStorage.Create(&u)
@@ -184,14 +184,12 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	token := tokenFromReq(r)
 
 	s, err := h.sessionStorage.Find(id)
-	if err != nil || (s != nil && token != s.SessionID) {
-		if err != nil {
-			h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
-	} else {
+	if err != nil {
+		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if token == s.SessionID {
 		fromDB, err := h.userStorage.FindByEmail(u.Email)
 		if err != nil {
 			h.logger.Errorf("Can't find user with id: %v; because of error: %v", id, err)
@@ -199,8 +197,8 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if fromDB != nil && id != fromDB.ID {
-			h.logger.Errorf("NewInfo user info has dublicate email: %v", err)
+		if  fromDB.ID != NotExistingID && id != fromDB.ID {
+			h.logger.Errorf("New user's email: %v, is already exist: %v", u.Email, err)
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
@@ -232,7 +230,59 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write(json)
+	} else {
+		w.WriteHeader(http.StatusNoContent)
 	}
+
+	//if err != nil || (s != nil && token != s.SessionID) {
+	//	if err != nil {
+	//		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//	w.WriteHeader(http.StatusNoContent)
+	//} else {
+	//	fromDB, err := h.userStorage.FindByEmail(u.Email)
+	//	if err != nil {
+	//		h.logger.Errorf("Can't find user with id: %v; because of error: %v", id, err)
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//
+	//	if fromDB != nil && id != fromDB.ID {
+	//		h.logger.Errorf("NewInfo user info has dublicate email: %v", err)
+	//		w.WriteHeader(http.StatusConflict)
+	//		return
+	//	}
+	//
+	//	t := user.JSONTime{time.Now()}
+	//	u.ID = id
+	//	u.UpdatedAt = t
+	//	u.Password, err = generateHash(u.Password)
+	//	if err != nil {
+	//		h.logger.Errorf("Can't generate hash: %v", err)
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//
+	//	err = h.userStorage.Update(&u)
+	//	if err != nil {
+	//		h.logger.Errorf("Can't update user with id=%v: %v", err, id)
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//
+	//	u.Password = ""
+	//	w.Header().Set("Content-Type", "application/json")
+	//	json, err := json.Marshal(u)
+	//	if err != nil {
+	//		h.logger.Errorf("Can't marshal user struct: %v", err)
+	//		http.Error(w, err.Error(), http.StatusBadRequest)
+	//		return
+	//	}
+	//	w.WriteHeader(http.StatusOK)
+	//	w.Write(json)
+	//}
 }
 
 func IDFromParams(r *http.Request) (int64, error) {
