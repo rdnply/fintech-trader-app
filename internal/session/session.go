@@ -1,47 +1,42 @@
 package session
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 	"time"
 )
 
 type Session struct {
 	SessionID  string
-	UserID     int
+	UserID     int64
 	CreatedAt  time.Time
 	ValidUntil time.Time
 }
 
-const (
-	Deadline = 30
-)
+type Storage interface {
+	Create(session *Session) error
+	Find(id int64) (*Session, error)
+}
 
-var sessions map[int]*Session
 
-func AddSession(token string, id int) error {
-	if sessions == nil {
-		sessions = make(map[int]*Session)
-	}
-
+func New(token string, userID int64) (*Session, error) {
 	str := time.Now().Format(time.RFC3339)
 
 	now, err := time.Parse(time.RFC3339, str)
 	if err != nil {
-		return fmt.Errorf("can't parse current time string: %v", err)
+		return nil, errors.Wrap(err,"can't parse current time string")
 	}
 
+	const Deadline = 30
 	until := now.Add(time.Minute * Deadline)
-	s := &Session{token, id, now, until}
 
-	sessions[id] = s
-
-	return nil
+	return &Session{token, userID, now, until}, nil
 }
 
-func GetSession(id int) (*Session, bool) {
-	if s, ok := sessions[id]; ok {
-		return s, true
-	}
-
-	return &Session{}, false
-}
+//
+//func GetSession(id int) (*Session, bool) {
+//	if s, ok := sessions[id]; ok {
+//		return s, true
+//	}
+//
+//	return &Session{}, false
+//}

@@ -17,7 +17,7 @@ type JSONTime struct {
 }
 
 type User struct {
-	ID        int      `json:"id,omitempty"`
+	ID        int64    `json:"id,omitempty"`
 	FirstName string   `json:"first_name,omitempty"`
 	LastName  string   `json:"last_name,omitempty"`
 	Birthday  BirthDay `json:"birthday,omitempty"`
@@ -27,7 +27,13 @@ type User struct {
 	CreatedAt JSONTime `json:"created_at,omitempty"`
 }
 
-type UserInfo struct {
+type Storage interface {
+	Create(u *User) error
+	Find(email string) (*User, error)
+	Update(u *User) error
+}
+
+type Info struct {
 	FirstName string   `json:"first_name"`
 	LastName  string   `json:"last_name"`
 	Birthday  BirthDay `json:"birthday,omitempty"`
@@ -87,4 +93,3 @@ func (jt *JSONTime) Scan(value interface{}) error {
 
 	return nil
 }
-
