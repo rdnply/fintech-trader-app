@@ -51,7 +51,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		h.logger.Errorf("Can't unmarshal input json for sign up: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
 	if err != nil {
 		h.logger.Errorf("Can't find user with id: %v; because of error: %v", u.ID, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		err = h.userStorage.Create(&u)
 		if err != nil {
 			h.logger.Errorf("Can't create user record in db with id: %v; because of error: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -98,14 +98,14 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		h.logger.Errorf("Can't unmarshal input json for sign in: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
 	if err != nil {
 		h.logger.Infof("Can't find user with id: %v; because of error: %v", u.ID, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		token, err := generateToken(u.Email + u.Password)
 		if err != nil {
 			h.logger.Errorf("Can't create new token: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -130,14 +130,14 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		s, err := session.New(token, fromDB.ID)
 		if err != nil {
 			h.logger.Errorf("Can't create struct for session: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = h.sessionStorage.Create(s)
 		if err != nil {
 			h.logger.Errorf("Can't create session: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -177,7 +177,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	id, err := IDFromParams(r)
 	if err != nil {
 		h.logger.Errorf("Can't get ID from URL params: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -186,14 +186,14 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	s, err := h.sessionStorage.Find(id)
 	if err != nil {
 		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if token == s.SessionID {
 		fromDB, err := h.userStorage.FindByEmail(u.Email)
 		if err != nil {
 			h.logger.Errorf("Can't find user with id: %v; because of error: %v", id, err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -209,14 +209,14 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		u.Password, err = generateHash(u.Password)
 		if err != nil {
 			h.logger.Errorf("Can't generate hash: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = h.userStorage.Update(&u)
 		if err != nil {
 			h.logger.Errorf("Can't update user with id=%v: %v", err, id)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -225,7 +225,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		json, err := json.Marshal(u)
 		if err != nil {
 			h.logger.Errorf("Can't marshal user struct: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -259,7 +259,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	id, err := IDFromParams(r)
 	if err != nil {
 		h.logger.Errorf("Can't get ID from URL params: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -268,7 +268,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	s, err := h.sessionStorage.Find(id)
 	if err != nil {
 		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -280,7 +280,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 		json, err := json.Marshal(*info)
 		if err != nil {
 			h.logger.Errorf("Can't marshal user info struct: %v", err)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
