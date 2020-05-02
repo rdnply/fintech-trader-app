@@ -60,7 +60,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
 	if err != nil {
-		h.logger.Errorf("Can't register user: %v; because of error: %v", u, err)
+		h.logger.Errorf("Can't find user with id: %v; because of error: %v", u.ID, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -103,9 +103,14 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
+	if err != nil {
+		h.logger.Infof("Can't find user with id: %v; because of error: %v", u.ID, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	if !isMatch(fromDB.Password, u.Password) || err != nil {
-		h.logger.Infof("Can't authorize with password: %v: error: %v", u.Password, err)
+	if !isMatch(fromDB.Password, u.Password) || fromDB.Email != u.Email {
+		h.logger.Infof("Can't authorize because password or email: %v, incorrect; error: %v", u.Email, err)
 		w.Header().Set("Content-Type", "application/json")
 		json := fmt.Sprintf("{\"error\" : incorrect email or password}")
 		w.WriteHeader(http.StatusBadRequest)
@@ -189,7 +194,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fromDB, err := h.userStorage.FindByEmail(u.Email)
 		if err != nil {
-			h.logger.Errorf("Can't find user: %v", err)
+			h.logger.Errorf("Can't find user with id: %v; because of error: %v", id, err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

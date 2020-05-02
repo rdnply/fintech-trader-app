@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const DateLayout = "2006-01-02"
-
 type BirthDay struct {
 	time.Time
 }
@@ -45,6 +43,8 @@ func NewInfo(u *User) *Info {
 	return &Info{u.FirstName, u.LastName, u.Birthday, u.Email}
 }
 
+
+const DateLayout = "2006-01-02"
 
 func (b *BirthDay) UnmarshalJSON(data []byte) error {
 	s := string(data)
