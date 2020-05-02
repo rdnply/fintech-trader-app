@@ -19,8 +19,8 @@ import (
 )
 
 type Handler struct {
-	logger logger.Logger
-	userStorage *postgres.UserStorage
+	logger         logger.Logger
+	userStorage    *postgres.UserStorage
 	sessionStorage *postgres.SessionStorage
 }
 
@@ -38,11 +38,10 @@ func (h *Handler) Routes() chi.Router {
 		r.Post("/signup", h.signUp)
 		r.Post("/signin", h.signIn)
 		r.Put("/users/{id}", h.updateUser)
-		//r.Get("/users/{id}", getUser)
+		r.Get("/users/{id}", h.getUser)
 	})
 	return r
 }
-
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var u user.User
@@ -59,32 +58,39 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		h.logger.Errorf("Can't generate hash for password: %v", err)
 	}
 
-	fromDB, err := h.userStorage.Find(u.Email)
-	if err != nil || fromDB != nil{////////////////////////////
-		h.logger.Errorf("Can't register user: %v", err)
+	fromDB, err := h.userStorage.FindByEmail(u.Email)
+	if err != nil {
+		h.logger.Errorf("Can't register user: %v; because of error: %v", u, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	const NotExistingID = 0
+
+	if fromDB.ID == NotExistingID {
+		err = h.userStorage.Create(&u)
+		if err != nil {
+			h.logger.Errorf("Can't create user record in db with id: %v; because of error: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+	} else {
 		w.Header().Set("Content-Type", "application/json")
 		json := fmt.Sprintf("{\"error\" : \"user %s is already registered\"}", u.Email)
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(json))
-	} else {
-		err = h.userStorage.Create(&u)
-		if err != nil {
-			h.logger.Errorf("Can't create fromDB: %v", err)
-		}
-		w.WriteHeader(http.StatusCreated)
 	}
 }
-
 
 func generateHash(pwd string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.MinCost)
 	if err != nil {
-		return "", errors.Wrap(err ,"can't generate hash")
+		return "", errors.Wrap(err, "can't generate hash")
 	}
 
 	return string(hash), nil
 }
-
 
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	var u user.User
@@ -96,7 +102,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fromDB, err := h.userStorage.Find(u.Email)
+	fromDB, err := h.userStorage.FindByEmail(u.Email)
 
 	if !isMatch(fromDB.Password, u.Password) || err != nil {
 		h.logger.Infof("Can't authorize with password: %v: error: %v", u.Password, err)
@@ -154,7 +160,6 @@ func isMatch(hashedPwd string, plainPwd string) bool {
 	return true
 }
 
-
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 	err := json.NewDecoder(r.Body).Decode(&u)
@@ -174,15 +179,15 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	token := tokenFromReq(r)
 
 	s, err := h.sessionStorage.Find(id)
-	if err != nil || token != s.SessionID {
+	if err != nil || (s != nil && token != s.SessionID) {
 		if err != nil {
-			h.logger.Errorf("Don't find session by user ID: %v; because of error: %v", id, err)
+			h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	} else {
-		fromDB, err := h.userStorage.Find(u.Email)
+		fromDB, err := h.userStorage.FindByEmail(u.Email)
 		if err != nil {
 			h.logger.Errorf("Can't find user: %v", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -190,7 +195,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if fromDB != nil && id != fromDB.ID {
-			h.logger.Errorf("New user info has dublicate email: %v", err)
+			h.logger.Errorf("NewInfo user info has dublicate email: %v", err)
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
@@ -225,7 +230,6 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func IDFromParams(r *http.Request) (int64, error) {
 	str := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(str, 10, 64)
@@ -245,40 +249,39 @@ func tokenFromReq(r *http.Request) string {
 	return s[TokenId]
 }
 
-//
-//func getUser(w http.ResponseWriter, r *http.Request) {
-//	id, err := IDFromParams(r)
-//	if err != nil {
-//		http.Error(w, err.Error(), http.StatusBadRequest)
-//		return
-//	}
-//
-//	tokenFromReq := tokenFromReq(r)
-//
-//	s, ok := session.GetSession(id)
-//	if ok && tokenFromReq == s.SessionID {
-//		db := db.GetDBConn()
-//
-//		var u user.User
-//		db.Where("id = ?", id).First(&u)
-//
-//		info := getUserInfo(&u)
-//
-//		json, err := json.Marshal(info)
-//		if err != nil {
-//			fmt.Printf("can't marshal struct with user's info: %v", err)
-//			http.Error(w, err.Error(), http.StatusBadRequest)
-//			return
-//		}
-//		w.Header().Set("Content-Type", "application/json")
-//		w.WriteHeader(http.StatusOK)
-//		w.Write(json)
-//	} else {
-//		w.WriteHeader(http.StatusUnauthorized)
-//	}
-//
-//}
-//
-//func getUserInfo(u *user.User) user.Info {
-//	return user.Info{u.FirstName, u.LastName, u.Birthday, u.Email}
-//}
+func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
+	id, err := IDFromParams(r)
+	if err != nil {
+		h.logger.Errorf("Can't get ID from URL params: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tokenFromReq := tokenFromReq(r)
+
+	s, err := h.sessionStorage.Find(id)
+	if err != nil {
+		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if tokenFromReq == s.SessionID {
+		u, err := h.userStorage.FindByID(id)
+
+		info := user.NewInfo(u)
+
+		json, err := json.Marshal(info)
+		if err != nil {
+			h.logger.Errorf("Can't marshal user struct: %v", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(json)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
+}

@@ -11,9 +11,10 @@ var _ user.Storage = &UserStorage{}
 type UserStorage struct {
 	statementStorage
 
-	createStmt *sql.Stmt
-	findStmt   *sql.Stmt
-	updateStmt *sql.Stmt
+	createStmt      *sql.Stmt
+	findByEmailStmt *sql.Stmt
+	findByIDStmt    *sql.Stmt
+	updateStmt      *sql.Stmt
 }
 
 func NewUserStorage(db *DB) (*UserStorage, error) {
@@ -21,7 +22,8 @@ func NewUserStorage(db *DB) (*UserStorage, error) {
 
 	stmts := []stmt{
 		{Query: createUserQuery, Dst: &s.createStmt},
-		{Query: findUserQuery, Dst: &s.findStmt},
+		{Query: findUserByEmailQuery, Dst: &s.findByEmailStmt},
+		{Query: findUserByIDQuery, Dst: &s.findByIDStmt},
 		{Query: updateUserQuery, Dst: &s.updateStmt},
 	}
 
@@ -31,7 +33,6 @@ func NewUserStorage(db *DB) (*UserStorage, error) {
 
 	return s, nil
 }
-
 
 func scanUser(scanner sqlScanner, u *user.User) error {
 	return scanner.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Birthday, &u.Email, &u.Password, &u.UpdatedAt, &u.CreatedAt)
@@ -49,29 +50,44 @@ func (s *UserStorage) Create(u *user.User) error {
 }
 
 const userFields = "first_name, last_name, birthday, email, password, updated_at, created_at"
-const findUserQuery = "SELECT id, " + userFields + " FROM users WHERE email=$1"
+const findUserByEmailQuery = "SELECT id, " + userFields + " FROM users WHERE email=$1"
 
-func (s *UserStorage) Find(email string) (*user.User, error) {
+func (s *UserStorage) FindByEmail(email string) (*user.User, error) {
 	var u user.User
-	row := s.findStmt.QueryRow(email)
-	if err := scanUser(row, &u); err != nil{
+	row := s.findByEmailStmt.QueryRow(email)
+	if err := scanUser(row, &u); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return &u, nil
 		}
 
-		return nil, errors.Wrap(err, "can't scan user")
+		return &u, errors.Wrap(err, "can't scan user")
+	}
+
+	return &u, nil
+}
+
+const findUserByIDQuery = "SELECT id, " + userFields + " FROM users WHERE id=$1"
+
+func (s *UserStorage) FindByID(id int64) (*user.User, error) {
+	var u user.User
+	row := s.findByIDStmt.QueryRow(id)
+	if err := scanUser(row, &u); err != nil {
+		if err == sql.ErrNoRows {
+			return &u, nil
+		}
+
+		return &u, errors.Wrap(err, "can't scan user")
 	}
 
 	return &u, nil
 }
 
 const updateUserQuery = "UPDATE users SET first_name=$1, last_name=$2, birthday=$3, email=$4, password=$5, updated_at=$6 " +
-	"WHERE id=$7 RETURNING " + userFields
+	"WHERE id=$7 RETURNING id, " + userFields
 
 func (s *UserStorage) Update(u *user.User) error {
-	if err := s.updateStmt.QueryRow(u.FirstName, u.LastName, u.Birthday, u.Email, u.Password, u.UpdatedAt, u.ID).
-		Scan(&u.FirstName, &u.LastName, &u.Birthday, &u.Email, &u.Password, &u.UpdatedAt, &u.CreatedAt);
-	err != nil {
+	row := s.updateStmt.QueryRow(u.FirstName, u.LastName, u.Birthday, u.Email, u.Password, u.UpdatedAt, u.ID)
+	if err := scanUser(row, u); err != nil {
 		return errors.Wrap(err, "can't exec query")
 	}
 

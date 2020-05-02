@@ -29,7 +29,8 @@ type User struct {
 
 type Storage interface {
 	Create(u *User) error
-	Find(email string) (*User, error)
+	FindByEmail(email string) (*User, error)
+	FindByID(id int64) (*User, error)
 	Update(u *User) error
 }
 
@@ -39,6 +40,11 @@ type Info struct {
 	Birthday  BirthDay `json:"birthday,omitempty"`
 	Email     string   `json:"email"`
 }
+
+func NewInfo(u *User) *Info {
+	return &Info{u.FirstName, u.LastName, u.Birthday, u.Email}
+}
+
 
 func (b *BirthDay) UnmarshalJSON(data []byte) error {
 	s := string(data)

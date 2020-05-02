@@ -56,7 +56,7 @@ func (st *SessionStorage) Find(userID int64) (*session.Session, error) {
 			return &s, nil
 		}
 
-		return nil, errors.Wrap(err, "can't scan session")
+		return &s, errors.Wrap(err, "can't scan session")
 	}
 
 	return &s, nil
