@@ -1,2 +1,0 @@
-{"level":"error","ts":"2020-05-02T14:22:22+03:00","caller":"http/server.go:2007","msg":"New user's email: a, is already exist: <nil>"}
-{"level":"error","ts":"2020-05-02T14:22:24+03:00","caller":"http/server.go:2007","msg":"New user's email: a, is already exist: <nil>"}

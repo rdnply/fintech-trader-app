@@ -32,11 +32,3 @@ func New(token string, userID int64) (*Session, error) {
 	return &Session{token, userID, now, until}, nil
 }
 
-//
-//func GetSession(id int) (*Session, bool) {
-//	if s, ok := sessions[id]; ok {
-//		return s, true
-//	}
-//
-//	return &Session{}, false
-//}
