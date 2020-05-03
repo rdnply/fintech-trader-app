@@ -3,9 +3,10 @@ package postgres
 import (
 	"cw1/pkg/log/logger"
 	"database/sql"
+	"time"
+
 	_ "github.com/lib/pq" // init postgres driver
 	"github.com/pkg/errors"
-	"time"
 )
 
 type DB struct {
@@ -32,11 +33,13 @@ func New(logger logger.Logger, filename string) (*DB, error) {
 
 func (d *DB) CheckConnection() error {
 	var err error
+
 	const maxAttempts = 3
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		if err = d.Session.Ping(); err == nil {
 			break
 		}
+
 		nextAttemptWait := time.Duration(attempt) * time.Second
 		d.Logger.Errorf("attempt %d: can't establish a connection with the db, wait for %v: %s",
 			attempt,
@@ -45,18 +48,18 @@ func (d *DB) CheckConnection() error {
 		)
 		time.Sleep(nextAttemptWait)
 	}
+
 	return errors.Wrap(err, "can't connect to db")
 }
-
 
 func (d *DB) Close() error {
 	if err := d.Session.Close(); err != nil {
 		return errors.Wrap(err, "can't close db")
 	}
+
 	return nil
 }
 
 type sqlScanner interface {
 	Scan(dest ...interface{}) error
 }
-

@@ -3,9 +3,10 @@ package postgres
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 type Configuration struct {
@@ -19,13 +20,14 @@ type Configuration struct {
 func ParseConfig(filename string) (string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return "", errors.Wrap( err, "unable to read input json file: " + filename)
+		return "", errors.Wrap(err, "unable to read input json file: "+filename)
 	}
+
 	defer f.Close()
 
 	byteData, err := ioutil.ReadAll(f)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to read input json file as a byte array: " + filename)
+		return "", errors.Wrap(err, "unable to read input json file as a byte array: "+filename)
 	}
 
 	var c Configuration

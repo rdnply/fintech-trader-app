@@ -1,8 +1,9 @@
 package session
 
 import (
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Session struct {
@@ -17,13 +18,12 @@ type Storage interface {
 	Find(id int64) (*Session, error)
 }
 
-
 func New(token string, userID int64) (*Session, error) {
 	str := time.Now().Format(time.RFC3339)
 
 	now, err := time.Parse(time.RFC3339, str)
 	if err != nil {
-		return nil, errors.Wrap(err,"can't parse current time string")
+		return nil, errors.Wrap(err, "can't parse current time string")
 	}
 
 	const Deadline = 30
@@ -31,4 +31,3 @@ func New(token string, userID int64) (*Session, error) {
 
 	return &Session{token, userID, now, until}, nil
 }
-

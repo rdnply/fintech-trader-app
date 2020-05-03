@@ -47,7 +47,6 @@ func NewInfo(u *User) Info {
 	return Info{u.FirstName, u.LastName, u.Birthday, u.Email}
 }
 
-
 const DateLayout = "2006-01-02"
 
 func (b *BirthDay) UnmarshalJSON(data []byte) error {
@@ -57,34 +56,38 @@ func (b *BirthDay) UnmarshalJSON(data []byte) error {
 	}
 
 	const layout = `"` + DateLayout + `"`
+
 	t, err := time.Parse(layout, s)
 	if err != nil {
 		return fmt.Errorf("can't parse birth date string: %v", err)
 	}
+
 	b.Time = t
 
 	return nil
 }
 
-func (bd *BirthDay) MarshalJSON() ([]byte, error) {
-	s := bd.Format(DateLayout)
+func (b *BirthDay) MarshalJSON() ([]byte, error) {
+	s := b.Format(DateLayout)
 
 	return []byte(s), nil
 }
 
-func (bd BirthDay) Value() (driver.Value, error) {
-	return bd.Time, nil
+func (b BirthDay) Value() (driver.Value, error) {
+	return b.Time, nil
 }
 
-func (bd *BirthDay) Scan(value interface{}) error {
+func (b *BirthDay) Scan(value interface{}) error {
 	t := value.(time.Time)
 	str := t.Format(DateLayout)
+
 	t, err := time.Parse(DateLayout, str)
 	if err != nil {
 		return fmt.Errorf("can't parse birth date in scanner for database: %v", err)
 	}
 
-	bd.Time = t
+	b.Time = t
+
 	return nil
 }
 
@@ -94,12 +97,12 @@ func (t *JSONTime) MarshalJSON() ([]byte, error) {
 	return []byte(s), nil
 }
 
-func (jt JSONTime) Value() (driver.Value, error) {
-	return jt.Time, nil
+func (t JSONTime) Value() (driver.Value, error) {
+	return t.Time, nil
 }
 
-func (jt *JSONTime) Scan(value interface{}) error {
-	jt.Time = value.(time.Time)
+func (t *JSONTime) Scan(value interface{}) error {
+	t.Time = value.(time.Time)
 
 	return nil
 }

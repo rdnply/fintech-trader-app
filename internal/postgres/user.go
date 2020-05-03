@@ -3,6 +3,7 @@ package postgres
 import (
 	"cw1/internal/user"
 	"database/sql"
+
 	"github.com/pkg/errors"
 )
 
@@ -54,6 +55,7 @@ const findUserByEmailQuery = "SELECT id, " + userFields + " FROM users WHERE ema
 
 func (s *UserStorage) FindByEmail(email string) (*user.User, error) {
 	var u user.User
+
 	row := s.findByEmailStmt.QueryRow(email)
 	if err := scanUser(row, &u); err != nil {
 		if err == sql.ErrNoRows {
@@ -70,6 +72,7 @@ const findUserByIDQuery = "SELECT id, " + userFields + " FROM users WHERE id=$1"
 
 func (s *UserStorage) FindByID(id int64) (*user.User, error) {
 	var u user.User
+
 	row := s.findByIDStmt.QueryRow(id)
 	if err := scanUser(row, &u); err != nil {
 		if err == sql.ErrNoRows {

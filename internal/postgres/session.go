@@ -3,6 +3,7 @@ package postgres
 import (
 	"cw1/internal/session"
 	"database/sql"
+
 	"github.com/pkg/errors"
 )
 
@@ -50,6 +51,7 @@ const findSessionQuery = "SELECT " + sessionFields + " FROM sessions WHERE user_
 
 func (st *SessionStorage) Find(userID int64) (*session.Session, error) {
 	var s session.Session
+
 	row := st.findStmt.QueryRow(userID)
 	if err := scanSession(row, &s); err != nil {
 		if err == sql.ErrNoRows {
