@@ -14,6 +14,10 @@ type JSONTime struct {
 	time.Time
 }
 
+func NewTime() JSONTime {
+	return JSONTime{time.Now()}
+}
+
 type User struct {
 	ID        int64    `json:"id,omitempty"`
 	FirstName string   `json:"first_name,omitempty"`
@@ -39,8 +43,8 @@ type Info struct {
 	Email     string   `json:"email"`
 }
 
-func NewInfo(u *User) *Info {
-	return &Info{u.FirstName, u.LastName, u.Birthday, u.Email}
+func NewInfo(u *User) Info {
+	return Info{u.FirstName, u.LastName, u.Birthday, u.Email}
 }
 
 

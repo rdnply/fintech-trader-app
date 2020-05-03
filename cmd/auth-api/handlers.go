@@ -13,6 +13,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Handler struct {
@@ -34,8 +36,8 @@ func (h *Handler) Routes() chi.Router {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", rootHandler{h.signUp, h.logger}.ServeHTTP)
 		r.Post("/signin", rootHandler{h.signIn, h.logger}.ServeHTTP)
-		//r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
-		//r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
+		r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
+		r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
 	})
 	return r
 }
@@ -155,7 +157,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) error {
 			return NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
 		}
 
-		respondJSON(w, http.StatusOK, map[string]string{ "bearer": token}, h.logger)
+		respondJSON(w, http.StatusOK, h.logger, map[string]string{"bearer": token})
 	}
 
 	return nil
@@ -183,163 +185,135 @@ func isMatch(hashedPwd string, plainPwd string) bool {
 	return true
 }
 
-//
-//func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
-//	var u user.User
-//	err := json.NewDecoder(r.Body).Decode(&u)
-//	if err != nil {
-//		h.logger.Errorf("Can't unmarshal input json for update user: %v", err)
-//		http.Error(w, err.Error(), http.StatusBadRequest)
-//		return
-//	}
-//
-//	id, err := IDFromParams(r)
-//	if err != nil {
-//		h.logger.Errorf("Can't get ID from URL params: %v", err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	if id == BottomLineValidID {
-//		h.logger.Errorf("Don't valid ID: %v", id)
-//		w.Header().Set("Content-Type", "application/json")
-//		json := fmt.Sprintf("{\"error\" : user %s is already registered}", u.Email)
-//		w.WriteHeader(http.StatusBadRequest)
-//		w.Write([]byte(json))
-//		return
-//	}
-//
-//	token := tokenFromReq(r)
-//
-//	s, err := h.sessionStorage.Find(id)
-//	if err != nil {
-//		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//	if token == s.SessionID {
-//		fromDB, err := h.userStorage.FindByEmail(u.Email)
-//		if err != nil {
-//			h.logger.Errorf("Can't find user with email: %v; because of error: %v", u.Email, err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		if fromDB.ID == BottomLineValidID {
-//			h.logger.Errorf("Can't find user with email: %v", u.Email)
-//			w.Header().Set("Content-Type", "application/json")
-//			json := fmt.Sprintf("{\"error\" : user %s is already registered}", u.Email)
-//			w.WriteHeader(http.StatusNotFound)
-//			w.Write([]byte(json))
-//			return
-//		}
-//
-//		if id != fromDB.ID {
-//			h.logger.Errorf("New user's email: %v, is already exist: %v", u.Email, err)
-//			w.Header().Set("Content-Type", "application/json")
-//			json := fmt.Sprintf("{\"error\" : user %s is already registered}", u.Email)
-//			w.WriteHeader(http.StatusBadRequest)
-//			w.Write([]byte(json))
-//			return
-//		}
-//
-//		t := user.JSONTime{time.Now()}
-//		u.ID = id
-//		u.UpdatedAt = t
-//		u.Password, err = generateHash(u.Password)
-//		if err != nil {
-//			h.logger.Errorf("Can't generate hash: %v", err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		err = h.userStorage.Update(&u)
-//		if err != nil {
-//			h.logger.Errorf("Can't update user with id=%v: %v", err, id)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//
-//		u.Password = ""
-//		w.Header().Set("Content-Type", "application/json")
-//		json, err := json.Marshal(u)
-//		if err != nil {
-//			h.logger.Errorf("Can't marshal user struct: %v", err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//		w.WriteHeader(http.StatusOK)
-//		w.Write(json)
-//	} else {
-//		w.WriteHeader(http.StatusNoContent)
-//	}
-//
-//}
-//
-//func IDFromParams(r *http.Request) (int64, error) {
-//	str := chi.URLParam(r, "id")
-//	id, err := strconv.ParseInt(str, 10, 64)
-//	if err != nil {
-//		return -1, errors.Wrap(err, "can't parse string to int for get id from params")
-//	}
-//
-//	return id, nil
-//}
-//
-//func tokenFromReq(r *http.Request) string {
-//	const TokenId = 1
-//
-//	token := r.Header.Get("Authorization")
-//	s := strings.Split(token, " ")
-//
-//	return s[TokenId]
-//}
-//
-//func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
-//	id, err := IDFromParams(r)
-//	if err != nil {
-//		h.logger.Errorf("Can't get ID from URL params: %v", err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	if id == BottomLineValidID {
-//
-//	}
-//
-//	tokenFromReq := tokenFromReq(r)
-//
-//	s, err := h.sessionStorage.Find(id)
-//	if err != nil {
-//		h.logger.Errorf("Can't find session by user ID: %v; because of error: %v", id, err)
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	if tokenFromReq == s.SessionID {
-//		u, err := h.userStorage.FindByID(id)
-//
-//		info := user.NewInfo(u)
-//
-//		json, err := json.Marshal(*info)
-//		if err != nil {
-//			h.logger.Errorf("Can't marshal user info struct: %v", err)
-//			http.Error(w, err.Error(), http.StatusInternalServerError)
-//			return
-//		}
-//		w.Header().Set("Content-Type", "application/json")
-//		w.WriteHeader(http.StatusOK)
-//		w.Write(json)
-//	} else {
-//		w.Header().Set("Content-Type", "application/json")
-//		json := fmt.Sprintf("{\"error\" : user %s is already registered}", id)
-//		w.WriteHeader(http.StatusNotFound)
-//		w.Write([]byte(json))
-//	}
-//}
-//
+func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
+	var u user.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		return NewHTTPError("Can't unmarshal input json for update user", err, "", http.StatusBadRequest)
+	}
 
-func respondJSON(w http.ResponseWriter, status int, payload interface{}, l logger.Logger) {
+	id, err := IDFromParams(r)
+	if err != nil {
+		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
+	}
+
+	if id <= BottomLineValidID {
+		ctx := fmt.Sprintf("Don't valid ID: %v", id)
+		s := fmt.Sprintf("user %s is already registered", u.Email)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	token := tokenFromReq(r)
+
+	s, err := h.sessionStorage.Find(id)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find session by user ID: %v", id)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	if token == s.SessionID {
+		fromDB, err := h.userStorage.FindByEmail(u.Email)
+		if err != nil {
+			ctx := fmt.Sprintf("Can't find user with email: %v", u.Email)
+			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		}
+
+		if fromDB.ID == BottomLineValidID {
+			ctx := fmt.Sprintf("Can't find user with email: %v", u.Email)
+			s := fmt.Sprintf("user %s is already registered", u.Email)
+			return NewHTTPError(ctx, err, s, http.StatusNotFound)
+		}
+
+		if id != fromDB.ID {
+			ctx := fmt.Sprintf("New user's email: %v, is already exist", u.Email)
+			s := fmt.Sprintf("user %s is already registered", u.Email)
+			return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+		}
+
+		t := user.NewTime()
+		u.ID = id
+		u.UpdatedAt = t
+		u.Password, err = generateHash(u.Password)
+		if err != nil {
+			return NewHTTPError("Can't generate hash", err, "", http.StatusInternalServerError)
+		}
+
+		err = h.userStorage.Update(&u)
+		if err != nil {
+			ctx := fmt.Sprintf("Can't update user with id= %v", id)
+			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		}
+
+		u.Password = ""
+		respondJSON(w, http.StatusOK, h.logger, u)
+	} else {
+		s := fmt.Sprintf("user %s is already registered", u.Email)
+		return NewHTTPError("Don't contain same token in storage", nil, s, http.StatusNotFound)
+	}
+
+	return nil
+}
+
+func IDFromParams(r *http.Request) (int64, error) {
+	str := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return -1, errors.Wrap(err, "can't parse string to int for get id from params")
+	}
+
+	return id, nil
+}
+
+func tokenFromReq(r *http.Request) string {
+	const TokenId = 1
+
+	token := r.Header.Get("Authorization")
+	s := strings.Split(token, " ")
+
+	return s[TokenId]
+}
+
+
+func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
+	id, err := IDFromParams(r)
+	if err != nil {
+		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
+	}
+
+	if id <= BottomLineValidID {
+		ctx := fmt.Sprintf("Don't valid ID: %v", id)
+		s := fmt.Sprintf("user %v is already registered", id)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	tokenFromReq := tokenFromReq(r)
+
+	s, err := h.sessionStorage.Find(id)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find session by user's ID: %v", id)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	if tokenFromReq == s.SessionID {
+		u, err := h.userStorage.FindByID(id)
+		if err != nil {
+			ctx := fmt.Sprintf("Can't find user in storage by ID: %v", id)
+			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		}
+
+		info := user.NewInfo(u)
+
+		respondJSON(w, http.StatusOK, h.logger, info)
+	} else {
+		s := fmt.Sprintf("user %v is already registered", id)
+		return NewHTTPError("Don't contain same token in storage", err, s, http.StatusNotFound)
+	}
+
+	return nil
+}
+
+
+func respondJSON(w http.ResponseWriter, status int, l logger.Logger, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
 		l.Errorf("Can't marshal respond to json: %v", err)
@@ -350,5 +324,3 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}, l logge
 	w.WriteHeader(status)
 	w.Write(response)
 }
-
-
