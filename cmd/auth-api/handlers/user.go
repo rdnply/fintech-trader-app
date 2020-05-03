@@ -218,17 +218,26 @@ func tokenFromReq(r *http.Request) string {
 	return s[TokenID]
 }
 
+func checkIDCorrectness(id int64) error {
+	if id <= BottomLineValidID {
+		ctx := fmt.Sprintf("Don't valid ID: %v", id)
+		s := fmt.Sprintf("incorrect id: %v", id)
+
+		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+	}
+
+	return nil
+}
+
 func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 	id, err := IDFromParams(r)
 	if err != nil {
 		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
 	}
 
-	if id <= BottomLineValidID {
-		ctx := fmt.Sprintf("Don't valid ID: %v", id)
-		s := fmt.Sprintf("user %v is already registered", id)
-
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	err = checkIDCorrectness(id)
+	if err != nil {
+		return err
 	}
 
 	tokenFromReq := tokenFromReq(r)

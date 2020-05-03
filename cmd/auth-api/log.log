@@ -1,1 +1,2 @@
-{"level":"info","ts":"2020-05-04T00:16:08+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-04T01:16:51+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"error","ts":"2020-05-04T01:17:02+03:00","caller":"http/server.go:2007","msg":"Can't find robot with id: 2 in storage: can't scan user: sql: Scan error on column index 2, name \"parent_robot_id\": converting NULL to int64 is unsupported"}
