@@ -1,0 +1,3 @@
+{"level":"error","ts":"2020-05-03T03:01:28+03:00","caller":"http/server.go:2007","msg":"Can't create session in storage: can't exec query: pq: повторяющееся значение ключа нарушает ограничение уникальности \"user_id_unique\""}
+{"level":"error","ts":"2020-05-03T03:02:56+03:00","caller":"http/server.go:2007","msg":"Can't authorize because password or email: b incorrect"}
+{"level":"error","ts":"2020-05-03T03:03:27+03:00","caller":"http/server.go:2007","msg":"Can't create session in storage: can't exec query: pq: повторяющееся значение ключа нарушает ограничение уникальности \"user_id_unique\""}
