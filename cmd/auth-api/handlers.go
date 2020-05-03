@@ -200,7 +200,7 @@ func isMatch(hashedPwd string, plainPwd string) bool {
 
 	err := bcrypt.CompareHashAndPassword(byteHash, []byte(plainPwd))
 
-	return err != nil
+	return err == nil
 }
 
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
@@ -214,13 +214,6 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	id, err := IDFromParams(r)
 	if err != nil {
 		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
-	}
-
-	if id <= BottomLineValidID {
-		ctx := fmt.Sprintf("Don't valid ID: %v", id)
-		s := fmt.Sprintf("user %s is already registered", u.Email)
-
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	token := tokenFromReq(r)
@@ -238,9 +231,11 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		err = checkUserIsRegistered(fromDB.ID, id, u.Email)
-		if err != nil {
-			return err
+		if fromDB.ID != BottomLineValidID && fromDB.ID == id {
+			ctx := fmt.Sprintf("New user's email: %v, is already exist", u.Email)
+			s := fmt.Sprintf("user %s is already registered", u.Email)
+
+			return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 		}
 
 		err = initUser(&u, id)
@@ -275,24 +270,6 @@ func initUser(u *user.User, id int64) error {
 	}
 
 	u.Password = pass
-
-	return nil
-}
-
-func checkUserIsRegistered(fromDB int64, id int64, email string) error {
-	if fromDB == BottomLineValidID {
-		ctx := fmt.Sprintf("Can't find user with email: %v", email)
-		s := fmt.Sprintf("user %s is already registered", email)
-
-		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
-	}
-
-	if id != fromDB {
-		ctx := fmt.Sprintf("New user's email: %v, is already exist", email)
-		s := fmt.Sprintf("user %s is already registered", email)
-
-		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
-	}
 
 	return nil
 }
