@@ -8,7 +8,7 @@ type Robot struct {
 	RobotID       int64       `json:"robot_id"`
 	OwnerUserID   int64       `json:"owner_user_id"`
 	ParentRobotID int64       `json:"parent_user_id,omitempty"`
-	IsFavorite    bool        `json:"is_favorite"`
+	IsFavourite   bool        `json:"is_favourite"`
 	IsActive      bool        `json:"is_active"`
 	Ticker        string      `json:"ticker,omitempty"`
 	BuyPrice      float64     `json:"buy_price,omitempty"`

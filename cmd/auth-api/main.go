@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"cw1/cmd/auth-api/handlers"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
 	"io"
@@ -59,7 +60,14 @@ func main() {
 
 	defer handleCloser(logger, "session_storage", sessionStorage)
 
-	h := NewHandler(logger, userStorage, sessionStorage)
+	robotStorage, err := postgres.NewRobotStorage(db)
+	if err != nil {
+		logger.Fatalf("Can't create robot storage: %s", err)
+	}
+
+	defer handleCloser(logger, "robot_storage", sessionStorage)
+
+	h := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage)
 	r := routes(h)
 	addr := net.JoinHostPort("", "5000")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -74,7 +82,7 @@ func main() {
 	}
 }
 
-func routes(h *Handler) *chi.Mux {
+func routes(h *handlers.Handler) *chi.Mux {
 	r := chi.NewRouter()
 
 	const Duration = 60
