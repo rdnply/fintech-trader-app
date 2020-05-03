@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/internal/session"
 	"cw1/internal/user"
@@ -260,7 +261,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 func initUser(u *user.User, id int64) error {
-	t := user.NewTime()
+	t := format.NewTime()
 	u.ID = id
 	u.UpdatedAt = t
 

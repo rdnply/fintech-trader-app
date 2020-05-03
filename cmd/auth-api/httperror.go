@@ -15,6 +15,15 @@ type HTTPError struct {
 	Status  int    `json:"-"`
 }
 
+func NewHTTPError(ctx string, err error, detail string, status int) error {
+	return &HTTPError{
+		Context: ctx,
+		Cause:   err,
+		Detail:  detail,
+		Status:  status,
+	}
+}
+
 func (e *HTTPError) Error() string {
 	if e.Cause == nil {
 		return e.Context
@@ -42,11 +51,3 @@ func (e *HTTPError) ResponseHeaders() (int, map[string]string) {
 	}
 }
 
-func NewHTTPError(ctx string, err error, detail string, status int) error {
-	return &HTTPError{
-		Context: ctx,
-		Cause:   err,
-		Detail:  detail,
-		Status:  status,
-	}
-}
