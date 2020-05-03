@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+
 	"github.com/pkg/errors"
 )
 
@@ -18,6 +19,7 @@ func (e *HTTPError) Error() string {
 	if e.Cause == nil {
 		return e.Context
 	}
+
 	return e.Context + ": " + e.Cause.Error()
 }
 
@@ -30,6 +32,7 @@ func (e *HTTPError) ResponseBody() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error while parsing response body")
 	}
+
 	return body, nil
 }
 

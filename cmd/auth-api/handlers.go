@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"cw1/internal/postgres"
 	"cw1/internal/session"
 	"cw1/internal/user"
@@ -9,12 +9,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Handler struct {
@@ -39,6 +40,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
 		r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
 	})
+
 	return r
 }
 
@@ -57,6 +59,7 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fn.logger.Errorf("Can't cast error to Client's error: %v", clientError)
 		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
 
@@ -66,17 +69,29 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fn.logger.Errorf("Can't get info about error because of : %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
+
 	status, headers := clientError.ResponseHeaders()
+
 	for k, v := range headers {
 		if body == nil && v == "application/json" {
 			continue
 		}
+
 		w.Header().Set(k, v)
 	}
+
 	w.WriteHeader(status)
-	w.Write(body)
+
+	c, err := w.Write(body)
+	if err != nil {
+		fn.logger.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
 }
 
 const BottomLineValidID = 0
@@ -106,6 +121,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) error {
 			ctx := fmt.Sprintf("Can't create user record in storage with id: %v", u.ID)
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
+
 		w.WriteHeader(http.StatusCreated)
 	} else {
 		s := fmt.Sprintf("user %s is already registered", u.Email)
@@ -141,24 +157,24 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) error {
 	if !isMatch(fromDB.Password, u.Password) || fromDB.Email != u.Email {
 		ctx := fmt.Sprintf("Can't authorize because password or email: %v incorrect", u.Email)
 		return NewHTTPError(ctx, err, "incorrect email or password", http.StatusBadRequest)
-	} else {
-		token, err := generateToken(u.Email + u.Password)
-		if err != nil {
-			return NewHTTPError("Can't create new token", err, "", http.StatusInternalServerError)
-		}
-
-		s, err := session.New(token, fromDB.ID)
-		if err != nil {
-			return NewHTTPError("Can't create struct for session", err, "", http.StatusInternalServerError)
-		}
-
-		err = h.sessionStorage.Create(s)
-		if err != nil {
-			return NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
-		}
-
-		respondJSON(w, http.StatusOK, h.logger, map[string]string{"bearer": token})
 	}
+
+	token, err := generateToken(u.Email + u.Password)
+	if err != nil {
+		return NewHTTPError("Can't create new token", err, "", http.StatusInternalServerError)
+	}
+
+	s, err := session.New(token, fromDB.ID)
+	if err != nil {
+		return NewHTTPError("Can't create struct for session", err, "", http.StatusInternalServerError)
+	}
+
+	err = h.sessionStorage.Create(s)
+	if err != nil {
+		return NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
+	}
+
+	respondJSON(w, http.StatusOK, h.logger, map[string]string{"bearer": token})
 
 	return nil
 }
@@ -169,24 +185,27 @@ func generateToken(s string) (string, error) {
 		return "", errors.Wrap(err, "can't generate token")
 	}
 
-	hasher := md5.New()
-	hasher.Write(hash)
+	hasher := sha256.New()
+
+	_, err = hasher.Write(hash)
+	if err != nil {
+		return "", errors.Wrap(err, "can't write hash")
+	}
 
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 func isMatch(hashedPwd string, plainPwd string) bool {
 	byteHash := []byte(hashedPwd)
-	err := bcrypt.CompareHashAndPassword(byteHash, []byte(plainPwd))
-	if err != nil {
-		return false
-	}
 
-	return true
+	err := bcrypt.CompareHashAndPassword(byteHash, []byte(plainPwd))
+
+	return err != nil
 }
 
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	var u user.User
+
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
 		return NewHTTPError("Can't unmarshal input json for update user", err, "", http.StatusBadRequest)
@@ -200,6 +219,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	if id <= BottomLineValidID {
 		ctx := fmt.Sprintf("Don't valid ID: %v", id)
 		s := fmt.Sprintf("user %s is already registered", u.Email)
+
 		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
@@ -218,24 +238,14 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		if fromDB.ID == BottomLineValidID {
-			ctx := fmt.Sprintf("Can't find user with email: %v", u.Email)
-			s := fmt.Sprintf("user %s is already registered", u.Email)
-			return NewHTTPError(ctx, err, s, http.StatusNotFound)
-		}
-
-		if id != fromDB.ID {
-			ctx := fmt.Sprintf("New user's email: %v, is already exist", u.Email)
-			s := fmt.Sprintf("user %s is already registered", u.Email)
-			return NewHTTPError(ctx, err, s, http.StatusBadRequest)
-		}
-
-		t := user.NewTime()
-		u.ID = id
-		u.UpdatedAt = t
-		u.Password, err = generateHash(u.Password)
+		err = checkUserIsRegistered(fromDB.ID, id, u.Email)
 		if err != nil {
-			return NewHTTPError("Can't generate hash", err, "", http.StatusInternalServerError)
+			return err
+		}
+
+		err = initUser(&u, id)
+		if err != nil {
+			return NewHTTPError("Can't init user", err, "", http.StatusInternalServerError)
 		}
 
 		err = h.userStorage.Update(&u)
@@ -254,8 +264,42 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func initUser(u *user.User, id int64) error {
+	t := user.NewTime()
+	u.ID = id
+	u.UpdatedAt = t
+
+	pass, err := generateHash(u.Password)
+	if err != nil {
+		return errors.Wrap(err, "can't generate hash")
+	}
+
+	u.Password = pass
+
+	return nil
+}
+
+func checkUserIsRegistered(fromDB int64, id int64, email string) error {
+	if fromDB == BottomLineValidID {
+		ctx := fmt.Sprintf("Can't find user with email: %v", email)
+		s := fmt.Sprintf("user %s is already registered", email)
+
+		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
+	}
+
+	if id != fromDB {
+		ctx := fmt.Sprintf("New user's email: %v, is already exist", email)
+		s := fmt.Sprintf("user %s is already registered", email)
+
+		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+	}
+
+	return nil
+}
+
 func IDFromParams(r *http.Request) (int64, error) {
 	str := chi.URLParam(r, "id")
+
 	id, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
 		return -1, errors.Wrap(err, "can't parse string to int for get id from params")
@@ -265,14 +309,13 @@ func IDFromParams(r *http.Request) (int64, error) {
 }
 
 func tokenFromReq(r *http.Request) string {
-	const TokenId = 1
+	const TokenID = 1
 
 	token := r.Header.Get("Authorization")
 	s := strings.Split(token, " ")
 
-	return s[TokenId]
+	return s[TokenID]
 }
-
 
 func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 	id, err := IDFromParams(r)
@@ -283,6 +326,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 	if id <= BottomLineValidID {
 		ctx := fmt.Sprintf("Don't valid ID: %v", id)
 		s := fmt.Sprintf("user %v is already registered", id)
+
 		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
@@ -295,7 +339,9 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if tokenFromReq == s.SessionID {
-		u, err := h.userStorage.FindByID(id)
+		var u *user.User
+
+		u, err = h.userStorage.FindByID(id)
 		if err != nil {
 			ctx := fmt.Sprintf("Can't find user in storage by ID: %v", id)
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
@@ -312,15 +358,23 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-
 func respondJSON(w http.ResponseWriter, status int, l logger.Logger, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
 		l.Errorf("Can't marshal respond to json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(response)
+
+	c, err := w.Write(response)
+	if err != nil {
+		l.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
 }

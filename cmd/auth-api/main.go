@@ -4,8 +4,6 @@ import (
 	"context"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
 	"io"
 	"log"
 	"net"
@@ -14,20 +12,22 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
+var config = logger.Configuration{
+	EnableConsole:     true,
+	ConsoleLevel:      logger.Debug,
+	ConsoleJSONFormat: true,
+	EnableFile:        true,
+	FileLevel:         logger.Info,
+	FileJSONFormat:    true,
+	FileLocation:      "log.log",
+}
 
 func main() {
-	config := logger.Configuration{
-		EnableConsole:     true,
-		ConsoleLevel:      logger.Debug,
-		ConsoleJSONFormat: true,
-		EnableFile:        true,
-		FileLevel:         logger.Info,
-		FileJSONFormat:    true,
-		FileLocation:      "log.log",
-	}
-
 	logger, err := logger.New(config, logger.InstanceZapLogger)
 	if err != nil {
 		log.Fatal("could not instantiate logger: ", err)
@@ -81,7 +81,6 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalf("could not shutdown server:%v", err)
 	}
-
 }
 
 func routes(h *Handler) *chi.Mux {
@@ -95,7 +94,6 @@ func routes(h *Handler) *chi.Mux {
 
 	return r
 }
-
 
 func handleCloser(l logger.Logger, resource string, closer io.Closer) {
 	if err := closer.Close(); err != nil {
