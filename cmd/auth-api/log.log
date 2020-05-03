@@ -1,3 +1,4 @@
 {"level":"info","ts":"2020-05-03T15:52:14+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
 {"level":"error","ts":"2020-05-03T15:53:36+03:00","caller":"http/server.go:2007","msg":"Can't get ID from URL params: can't parse string to int for get id from params: strconv.ParseInt: parsing \"36curl\": invalid syntax"}
 {"level":"error","ts":"2020-05-03T15:53:36+03:00","caller":"http/server.go:2007","msg":"Don't contain same token in storage"}
+{"level":"info","ts":"2020-05-03T15:57:04+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
