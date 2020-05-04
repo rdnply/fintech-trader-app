@@ -56,9 +56,10 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	if fromDB.RobotID == BottomLineValidID {
+
+	if fromDB.RobotID == BottomLineValidID  || fromDB.DeletedAt.Valid {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", id)
-		s := fmt.Sprintf("robot with id: %v don't exist", id)
+		s := fmt.Sprintf("robot with id %v don't exist", id)
 
 		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
 	}

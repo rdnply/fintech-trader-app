@@ -1,13 +1,14 @@
 package format
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"time"
 )
 
 type Day struct {
-	time.Time
+	sql.NullTime
 }
 
 const DateLayout = "2006-01-02"
@@ -31,7 +32,7 @@ func (b *Day) UnmarshalJSON(data []byte) error {
 }
 
 func (b *Day) MarshalJSON() ([]byte, error) {
-	s := b.Format(DateLayout)
+	s := b.Time.Format(DateLayout)
 
 	return []byte(s), nil
 }
