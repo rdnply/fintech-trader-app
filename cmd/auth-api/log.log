@@ -1,6 +1,1 @@
-{"level":"info","ts":"2020-05-04T13:48:57+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
-{"level":"error","ts":"2020-05-04T13:50:14+03:00","caller":"http/server.go:2007","msg":"Don't valid ID: -1"}
-{"level":"error","ts":"2020-05-04T13:50:27+03:00","caller":"http/server.go:2007","msg":"Can't find robot with id: 3 in storage"}
-{"level":"error","ts":"2020-05-04T13:50:39+03:00","caller":"http/server.go:2007","msg":"Can't find owner by token"}
-{"level":"error","ts":"2020-05-04T13:52:37+03:00","caller":"http/server.go:2007","msg":"User with id: 38 can't delete robot with id: 39"}
-{"level":"info","ts":"2020-05-04T13:55:13+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-04T16:10:44+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}

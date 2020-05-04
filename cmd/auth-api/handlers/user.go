@@ -19,7 +19,6 @@ import (
 
 const BottomLineValidID = 0
 
-
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) error {
 	var u user.User
 
@@ -279,25 +278,28 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	fromDB, err := h.userStorage.FindByID(id)
+	token := tokenFromReq(r)
+
+	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find user with id: %v in storage", id)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return NewHTTPError("Can't find user by id in storage", err, "", http.StatusInternalServerError)
 	}
 
-
-	if fromDB.ID == BottomLineValidID {
-		ctx := fmt.Sprintf("Can't find user with id: %v in storage", id)
-		s := fmt.Sprintf("user with id %v don't exist", id)
+	if s.UserID == BottomLineValidID {
+		ctx := fmt.Sprintf("Can't find user with id: %v", id)
+		s := fmt.Sprintf("can't find user with id: %v", id)
 
 		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
+	}
+
+	if token != s.SessionID {
+		return NewHTTPError("Tokens don't match", nil, "incorrect token", http.StatusBadRequest)
 	}
 
 	robots, err := h.robotStorage.FindByOwnerID(id)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't get robots with owner id: %v from storage", id)
-
-		return NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
 	t := r.Header.Get("Accept")
@@ -335,4 +337,3 @@ func respondJSON(w http.ResponseWriter, status int, l logger.Logger, payload int
 		return
 	}
 }
-

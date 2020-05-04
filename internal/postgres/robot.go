@@ -86,14 +86,14 @@ func (s *RobotStorage) FindByOwnerID(id int64) ([]*robot.Robot, error) {
 	robots := make([]*robot.Robot, 0)
 
 	for rows.Next() {
-		var r *robot.Robot
+		var r robot.Robot
 
-		err = scanRobot(rows, r)
+		err = scanRobot(rows, &r)
 		if err != nil {
 			return nil, errors.Wrap(err, "can't scan row with robot")
 		}
 
-		robots = append(robots, r)
+		robots = append(robots, &r)
 	}
 
 	if err = rows.Err(); err != nil {
