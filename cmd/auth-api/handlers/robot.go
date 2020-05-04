@@ -16,18 +16,19 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError("Can't unmarshal input json for creating robot", err, "", http.StatusBadRequest)
 	}
 
-	ownerFromDB, err := h.userStorage.FindByID(rbt.OwnerUserID)
-	if err != nil {
-		ctx := fmt.Sprintf("Can't find user with id: %v in storage", rbt.OwnerUserID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	token := tokenFromReq(r)
+
+	u, err := h.sessionStorage.FindByToken(token)
+	if err != nil{
+		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
 	}
 
-	if ownerFromDB.ID == BottomLineValidID {
-		ctx := fmt.Sprintf("User with id: %v don't exist", rbt.OwnerUserID)
-		s := fmt.Sprintf("user %v is already registered", rbt.OwnerUserID)
-
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	if u.UserID == BottomLineValidID {
+		s := fmt.Sprintf("can't find owner")
+		return NewHTTPError("Can't find owner by token", err, s, http.StatusBadRequest)
 	}
+
+	rbt.OwnerUserID = u.UserID
 
 	err = h.robotStorage.Create(&rbt)
 	if err != nil {
@@ -35,7 +36,7 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-
+	
 	return nil
 }
 

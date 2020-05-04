@@ -1,4 +1,2 @@
-{"level":"info","ts":"2020-05-04T11:44:52+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
-{"level":"error","ts":"2020-05-04T11:45:02+03:00","caller":"http/server.go:2007","msg":"Can't find robot with id: 2 in storage"}
-{"level":"error","ts":"2020-05-04T11:45:13+03:00","caller":"http/server.go:2007","msg":"Can't find robot with id: 1 in storage"}
-{"level":"info","ts":"2020-05-04T11:45:28+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-04T13:30:24+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-04T13:31:56+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}

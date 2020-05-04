@@ -13,7 +13,8 @@ type SessionStorage struct {
 	statementStorage
 
 	createStmt *sql.Stmt
-	findStmt   *sql.Stmt
+	findByID   *sql.Stmt
+	findByToken   *sql.Stmt
 }
 
 func NewSessionStorage(db *DB) (*SessionStorage, error) {
@@ -21,7 +22,8 @@ func NewSessionStorage(db *DB) (*SessionStorage, error) {
 
 	stmts := []stmt{
 		{Query: createSessionQuery, Dst: &s.createStmt},
-		{Query: findSessionQuery, Dst: &s.findStmt},
+		{Query: findSessionByIDQuery, Dst: &s.findByID},
+		{Query: findSessionByTokenQuery, Dst: &s.findByToken},
 	}
 
 	if err := s.initStatements(stmts); err != nil {
@@ -47,12 +49,29 @@ func (st *SessionStorage) Create(s *session.Session) error {
 	return nil
 }
 
-const findSessionQuery = "SELECT " + sessionFields + " FROM sessions WHERE user_id=$1"
+const findSessionByIDQuery = "SELECT " + sessionFields + " FROM sessions WHERE user_id=$1"
 
-func (st *SessionStorage) Find(userID int64) (*session.Session, error) {
+func (st *SessionStorage) FindByID(userID int64) (*session.Session, error) {
 	var s session.Session
 
-	row := st.findStmt.QueryRow(userID)
+	row := st.findByID.QueryRow(userID)
+	if err := scanSession(row, &s); err != nil {
+		if err == sql.ErrNoRows {
+			return &s, nil
+		}
+
+		return &s, errors.Wrap(err, "can't scan session")
+	}
+
+	return &s, nil
+}
+
+const findSessionByTokenQuery = "SELECT " + sessionFields + " FROM sessions WHERE session_id=$1"
+
+func (st *SessionStorage) FindByToken(token string) (*session.Session, error) {
+	var s session.Session
+
+	row := st.findByToken.QueryRow(token)
 	if err := scanSession(row, &s); err != nil {
 		if err == sql.ErrNoRows {
 			return &s, nil

@@ -142,7 +142,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 
 	token := tokenFromReq(r)
 
-	s, err := h.sessionStorage.Find(id)
+	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't find session by user ID: %v", id)
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
@@ -242,7 +242,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 
 	tokenFromReq := tokenFromReq(r)
 
-	s, err := h.sessionStorage.Find(id)
+	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't find session by user's ID: %v", id)
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
@@ -264,6 +264,53 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 		s := fmt.Sprintf("user %v is already registered", id)
 		return NewHTTPError("Don't contain same token in storage", err, s, http.StatusNotFound)
 	}
+
+	return nil
+}
+
+func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
+	id, err := IDFromParams(r)
+	if err != nil {
+		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+	}
+
+	err = checkIDCorrectness(id)
+	if err != nil {
+		return err
+	}
+
+	fromDB, err := h.userStorage.FindByID(id)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find user with id: %v in storage", id)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+
+	if fromDB.ID == BottomLineValidID {
+		ctx := fmt.Sprintf("Can't find user with id: %v in storage", id)
+		s := fmt.Sprintf("user with id %v don't exist", id)
+
+		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
+	}
+
+	robots, err := h.robotStorage.FindByOwnerID(id)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't get robots with owner id: %v from storage", id)
+
+		return NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+	}
+
+	t := r.Header.Get("Accept")
+
+	if t == "" {
+		return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
+	}
+
+	if t == "application/json" {
+		respondJSON(w, http.StatusOK, h.logger, robots)
+	}
+
+	//html
 
 	return nil
 }

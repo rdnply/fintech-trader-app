@@ -15,7 +15,8 @@ type Session struct {
 
 type Storage interface {
 	Create(session *Session) error
-	Find(id int64) (*Session, error)
+	FindByID(id int64) (*Session, error)
+	FindByToken(token string) (*Session, error)
 }
 
 func New(token string, userID int64) (*Session, error) {

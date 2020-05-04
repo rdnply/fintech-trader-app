@@ -27,7 +27,7 @@ type Robot struct {
 type Storage interface {
 	Create(r *Robot) error
 	FindByID(id int64) (*Robot, error)
-	FindByOwnerID(id int64) (*Robot, error)
+	FindByOwnerID(id int64) ([]*Robot, error)
 	FindByTicker(ticker string) (*Robot, error)
 	Update(r *Robot) error
 }

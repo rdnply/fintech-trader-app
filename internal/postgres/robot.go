@@ -75,19 +75,32 @@ func (s *RobotStorage) FindByID(id int64) (*robot.Robot, error) {
 
 const findRobotByOwnerIDQuery = "SELECT robot_id, " + robotFields + " FROM robots WHERE owner_user_id=$1"
 
-func (s *RobotStorage) FindByOwnerID(id int64) (*robot.Robot, error) {
-	var r robot.Robot
-
-	row := s.findByOwnerIDStmt.QueryRow(id)
-	if err := scanRobot(row, &r); err != nil {
-		if err == sql.ErrNoRows {
-			return &r, nil
-		}
-
-		return &r, errors.Wrap(err, "can't scan user")
+func (s *RobotStorage) FindByOwnerID(id int64) ([]*robot.Robot, error) {
+	rows, err := s.findByOwnerIDStmt.Query(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't exec query to get robots")
 	}
 
-	return &r, nil
+	defer rows.Close()
+
+	robots := make([]*robot.Robot, 0)
+
+	for rows.Next() {
+		var r *robot.Robot
+
+		err = scanRobot(rows, r)
+		if err != nil {
+			return nil, errors.Wrap(err, "can't scan row with robot")
+		}
+
+		robots = append(robots, r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows contain error")
+	}
+
+	return robots, nil
 }
 
 const findRobotByTickerQuery = "SELECT robot_id, " + robotFields + " FROM robots WHERE ticker=$1"
@@ -101,7 +114,7 @@ func (s *RobotStorage) FindByTicker(ticker string) (*robot.Robot, error) {
 			return &r, nil
 		}
 
-		return &r, errors.Wrap(err, "can't scan user")
+		return &r, errors.Wrap(err, "can't scan robots")
 	}
 
 	return &r, nil
