@@ -11,11 +11,13 @@ var _ robot.Storage = &RobotStorage{}
 type RobotStorage struct {
 	statementStorage
 
-	createStmt        *sql.Stmt
-	findByIDStmt      *sql.Stmt
-	findByOwnerIDStmt *sql.Stmt
-	findByTickerStmt  *sql.Stmt
-	updateStmt        *sql.Stmt
+	createStmt                 *sql.Stmt
+	findByIDStmt               *sql.Stmt
+	findByOwnerIDStmt          *sql.Stmt
+	findByTickerStmt           *sql.Stmt
+	findByOwnerIDAndTickerStmt *sql.Stmt
+	findAllRobotsStmt          *sql.Stmt
+	updateStmt                 *sql.Stmt
 }
 
 func NewRobotStorage(db *DB) (*RobotStorage, error) {
@@ -26,6 +28,8 @@ func NewRobotStorage(db *DB) (*RobotStorage, error) {
 		{Query: findRobotByIDQuery, Dst: &s.findByIDStmt},
 		{Query: findRobotByOwnerIDQuery, Dst: &s.findByOwnerIDStmt},
 		{Query: findRobotByTickerQuery, Dst: &s.findByTickerStmt},
+		{Query: findRobotByOwnerIDAndTickerQuery, Dst: &s.findByOwnerIDAndTickerStmt},
+		{Query: findAllRobotsQuery, Dst: &s.findAllRobotsStmt},
 		{Query: updateRobotQuery, Dst: &s.updateStmt},
 	}
 
@@ -35,7 +39,6 @@ func NewRobotStorage(db *DB) (*RobotStorage, error) {
 
 	return s, nil
 }
-
 
 func scanRobot(scanner sqlScanner, r *robot.Robot) error {
 	return scanner.Scan(&r.RobotID, &r.OwnerUserID, &r.ParentRobotID, &r.IsFavourite, &r.IsActive, &r.Ticker, &r.BuyPrice, &r.SellPrice,
@@ -53,8 +56,7 @@ func (s *RobotStorage) Create(r *robot.Robot) error {
 	return nil
 }
 
-const robotFields =
-	"owner_user_id, parent_robot_id, is_favourite, is_active, ticker, buy_price, sell_price, plan_start, plan_end, " +
+const robotFields = "owner_user_id, parent_robot_id, is_favourite, is_active, ticker, buy_price, sell_price, plan_start, plan_end, " +
 	"plan_yield, fact_yield, deals_count, activated_at, deactivated_at, created_at, deleted_at"
 const findRobotByIDQuery = "SELECT robot_id, " + robotFields + " FROM robots WHERE robot_id=$1"
 
@@ -105,23 +107,107 @@ func (s *RobotStorage) FindByOwnerID(id int64) ([]*robot.Robot, error) {
 
 const findRobotByTickerQuery = "SELECT robot_id, " + robotFields + " FROM robots WHERE ticker=$1"
 
-func (s *RobotStorage) FindByTicker(ticker string) (*robot.Robot, error) {
-	var r robot.Robot
-
-	row := s.findByTickerStmt.QueryRow(ticker)
-	if err := scanRobot(row, &r); err != nil {
-		if err == sql.ErrNoRows {
-			return &r, nil
-		}
-
-		return &r, errors.Wrap(err, "can't scan robots")
+func (s *RobotStorage) FindByTicker(ticker string) ([]*robot.Robot, error) {
+	rows, err := s.findByTickerStmt.Query(ticker)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't exec query to get robots")
 	}
 
-	return &r, nil
+	defer rows.Close()
+
+	robots := make([]*robot.Robot, 0)
+
+	for rows.Next() {
+		var r robot.Robot
+
+		err = scanRobot(rows, &r)
+		if err != nil {
+			return nil, errors.Wrap(err, "can't scan row with robot")
+		}
+
+		robots = append(robots, &r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows contain error")
+	}
+
+	return robots, nil
 }
 
-const updateRobotQuery =
-	"UPDATE robots SET " +
+const findRobotByOwnerIDAndTickerQuery = "SELECT robot_id, " + robotFields + " FROM robots WHERE owner_user_id=$1 AND ticker=$2"
+
+func (s *RobotStorage) findByOwnerIDAndTicker(id int64, ticker string) ([]*robot.Robot, error) {
+	rows, err := s.findByOwnerIDAndTickerStmt.Query(id, ticker)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't exec query to get robots")
+	}
+
+	defer rows.Close()
+
+	robots := make([]*robot.Robot, 0)
+
+	for rows.Next() {
+		var r robot.Robot
+
+		err = scanRobot(rows, &r)
+		if err != nil {
+			return nil, errors.Wrap(err, "can't scan row with robot")
+		}
+
+		robots = append(robots, &r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows contain error")
+	}
+
+	return robots, nil
+}
+
+const findAllRobotsQuery = "SELECT robot_id, " + robotFields + " FROM robots"
+
+func (s *RobotStorage) findAllRobots() ([]*robot.Robot, error) {
+	rows, err := s.findAllRobotsStmt.Query()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't exec query to get robots")
+	}
+
+	defer rows.Close()
+
+	robots := make([]*robot.Robot, 0)
+
+	for rows.Next() {
+		var r robot.Robot
+
+		err = scanRobot(rows, &r)
+		if err != nil {
+			return nil, errors.Wrap(err, "can't scan row with robot")
+		}
+
+		robots = append(robots, &r)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows contain error")
+	}
+
+	return robots, nil
+}
+
+func (s *RobotStorage) GetAll(id int64, ticker string) ([]*robot.Robot, error) {
+	if id != 0 && ticker != "" {
+		return s.findByOwnerIDAndTicker(id, ticker)
+	} else if id != 0 {
+		return s.FindByOwnerID(id)
+	} else if ticker != "" {
+		return s.FindByTicker(ticker)
+	}
+
+	return s.findAllRobots()
+}
+
+const updateRobotQuery = "UPDATE robots SET " +
 	"owner_user_id=$2, parent_robot_id=$3, is_favourite=$4, is_active=$5, ticker=$6, buy_price=$7, " +
 	"sell_price=$8, plan_start=$9, plan_end=$10, plan_yield=$11, fact_yield=$12, deals_count=$13, activated_at=$14, deactivated_at=$15, " +
 	"created_at=$16, deleted_at=$17 " +

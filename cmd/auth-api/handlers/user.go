@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto/sha256"
 	"cw1/internal/format"
+	"cw1/internal/robot"
 	"cw1/internal/session"
 	"cw1/internal/user"
 	"cw1/pkg/log/logger"
@@ -302,17 +303,24 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
+	err = respondWithData(w, r, robots, h.logger)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func respondWithData(w http.ResponseWriter, r *http.Request, rbts []*robot.Robot, l logger.Logger) error {
 	t := r.Header.Get("Accept")
 
-	if t == "" {
+	if t == "application/json" {
+		respondJSON(w, http.StatusOK, l, rbts)
+	} else if t == "text/html" {
+		//html
+	} else {
 		return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
 	}
-
-	if t == "application/json" {
-		respondJSON(w, http.StatusOK, h.logger, robots)
-	}
-
-	//html
 
 	return nil
 }

@@ -28,6 +28,7 @@ type Storage interface {
 	Create(r *Robot) error
 	FindByID(id int64) (*Robot, error)
 	FindByOwnerID(id int64) ([]*Robot, error)
-	FindByTicker(ticker string) (*Robot, error)
+	FindByTicker(ticker string) ([]*Robot, error)
+	GetAll(id int64, ticker string) ([]*Robot, error)
 	Update(r *Robot) error
 }
