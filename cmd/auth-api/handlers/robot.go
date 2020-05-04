@@ -25,7 +25,7 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 
 	if u.UserID == BottomLineValidID {
 		s := fmt.Sprintf("can't find owner")
-		return NewHTTPError("Can't find owner by token", err, s, http.StatusBadRequest)
+		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
 	}
 
 	rbt.OwnerUserID = u.UserID
@@ -36,40 +36,59 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	
+
 	return nil
 }
 
 func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
-	id, err := IDFromParams(r)
+	rbtID, err := IDFromParams(r)
 	if err != nil {
 		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
 	}
 
-	err = checkIDCorrectness(id)
+	err = checkIDCorrectness(rbtID)
 	if err != nil {
 		return err
 	}
 
-	fromDB, err := h.robotStorage.FindByID(id)
+	token := tokenFromReq(r)
+
+	u, err := h.sessionStorage.FindByToken(token)
+	if err != nil{
+		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+	}
+
+	if u.UserID == BottomLineValidID {
+		s := fmt.Sprintf("can't find owner")
+		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", id)
+		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
 
-	if fromDB.RobotID == BottomLineValidID  || fromDB.DeletedAt.Valid {
-		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", id)
-		s := fmt.Sprintf("robot with id %v don't exist", id)
+	if rbtFromDB.RobotID == BottomLineValidID  || rbtFromDB.DeletedAt.Valid {
+		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
+		s := fmt.Sprintf("robot with id %v don't exist", rbtID)
 
 		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
 	}
 
-	fromDB.DeletedAt = format.NewTime()
+	if rbtFromDB.OwnerUserID != u.UserID {
+		ctx := fmt.Sprintf("User with id: %v don't own robot with id: %v", u.UserID, rbtFromDB.RobotID)
+		s := fmt.Sprintf("user with id %v don't own robot with id: %v", u.UserID, rbtID)
 
-	err = h.robotStorage.Update(fromDB)
+		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB.DeletedAt = format.NewTime()
+
+	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't delete robot from storage with id: %v", id)
+		ctx := fmt.Sprintf("Can't delete robot from storage with rbtID: %v", rbtID)
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
