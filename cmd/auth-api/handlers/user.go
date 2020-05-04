@@ -185,7 +185,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 func initUser(u *user.User, id int64) error {
 	t := format.NewTime()
 	u.ID = id
-	u.UpdatedAt = t
+	u.UpdatedAt = *t
 
 	pass, err := generateHash(u.Password)
 	if err != nil {

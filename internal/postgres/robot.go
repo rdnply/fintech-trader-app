@@ -136,8 +136,3 @@ func (s *RobotStorage) Update(r *robot.Robot) error {
 
 	return nil
 }
-
-//func robotArgs(r *robot.Robot) []interface{} {
-//	return []interface{}{&r.RobotID, &r.OwnerUserID, &r.ParentRobotID, &r.IsFavourite, &r.IsActive, &r.Ticker, &r.BuyPrice, &r.SellPrice,
-//		&r.PlanStart, &r.PlanEnd, &r.PlanYield, &r.FactYield, &r.DealsCount, &r.ActivatedAt, &r.DeactivatedAt, &r.CreatedAt, &r.DeletedAt}
-//}

@@ -70,7 +70,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 	}
 
 
-	if rbtFromDB.RobotID == BottomLineValidID  || rbtFromDB.DeletedAt.Value.Valid {
+	if rbtFromDB.RobotID == BottomLineValidID  || rbtFromDB.DeletedAt.V.Valid {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
 		s := fmt.Sprintf("robot with id %v don't exist", rbtID)
 
