@@ -1,0 +1,47 @@
+{{define "head"}}<title>Роботы</title>{{end}}
+{{define "body"}}
+    <div>
+        <table border="1">
+            <tr>
+                <th>Идентификатор робота</th>
+                <th>Владелец робота</th>
+                <th>Идентификатор родителя</th>
+                <th>Избранное</th>
+                <th>Активность</th>
+                <th>Тикер</th>
+                <th>Цена покупки</th>
+                <th>Цена продажи</th>
+                <th>Плановая дата запуска</th>
+                <th>Плановая дата остановки</th>
+                <th>Плановая доходность</th>
+                <th>Фактическая доходность</th>
+                <th>Кол-во сделок</th>
+                <th>Дата активации</th>
+                <th>Дата деактивации</th>
+                <th>Дата регистрации</th>
+                <th>Дата удаления</th>
+            </tr>
+            {{range $ind, $el := . }}
+                <tr>
+                    <td>{{$el.RobotID}}</td>
+                    <td>{{$el.OwnerUserID  }}</td>
+                    <td>{{$el.ParentRobotID | printInt}}</td>
+                    <td>{{$el.IsFavourite  }}</td>
+                    <td>{{$el.IsActive     }}</td>
+                    <td>{{$el.Ticker     | printStr  }}</td>
+                    <td>{{$el.BuyPrice   | printFloat }}</td>
+                    <td>{{$el.SellPrice  | printFloat  }}</td>
+                    <td>{{$el.PlanStart  | printTime  }}</td>
+                    <td>{{$el.PlanEnd    | printTime  }}</td>
+                    <td>{{$el.PlanYield  | printFloat  }}</td>
+                    <td>{{$el.FactYield  | printFloat  }}</td>
+                    <td>{{$el.DealsCount | printInt  }}</td>
+                    <td>{{$el.ActivatedAt | printTime  }}</td>
+                    <td>{{$el.DeactivatedAt | printTime}}</td>
+                    <td>{{$el.CreatedAt  | printTime  }}</td>
+                    <td>{{$el.DeletedAt  | printTime  }}</td>
+                </tr>
+            {{end}}
+        </table>
+    </div>
+{{end}}

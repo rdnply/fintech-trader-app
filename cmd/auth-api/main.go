@@ -67,7 +67,11 @@ func main() {
 
 	defer handleCloser(logger, "robot_storage", sessionStorage)
 
-	h := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage)
+	h, err := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage)
+	if err != nil {
+		logger.Fatalf("Can't create new handler: %s", err)
+	}
+
 	r := routes(h)
 	addr := net.JoinHostPort("", "5000")
 	srv := &http.Server{Addr: addr, Handler: r}

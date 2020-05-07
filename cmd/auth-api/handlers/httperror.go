@@ -50,4 +50,3 @@ func (e *HTTPError) ResponseHeaders() (int, map[string]string) {
 		"Content-Type": "application/json",
 	}
 }
-

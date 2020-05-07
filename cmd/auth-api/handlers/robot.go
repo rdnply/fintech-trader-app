@@ -5,9 +5,10 @@ import (
 	"cw1/internal/robot"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
@@ -129,7 +130,10 @@ func (h *Handler) getRobots(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	respondWithData(w, r, robots, h.logger)
+	err = respondWithData(w, r, robots, h.tmplts)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -137,8 +141,7 @@ func (h *Handler) getRobots(w http.ResponseWriter, r *http.Request) error {
 func IDAndTickerFromParams(r *http.Request) (int64, string, error) {
 	userStr := r.URL.Query().Get("user")
 
-
-	var id int64  = BottomLineValidID
+	var id int64 = BottomLineValidID
 	if userStr != "" {
 		var err error
 

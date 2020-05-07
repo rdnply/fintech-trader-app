@@ -5,11 +5,11 @@ import (
 )
 
 type Robot struct {
-	RobotID       int64              `json:"robot_id"`
-	OwnerUserID   int64              `json:"owner_user_id"`
+	RobotID       int64               `json:"robot_id"`
+	OwnerUserID   int64               `json:"owner_user_id"`
 	ParentRobotID *format.NullInt64   `json:"parent_user_id,omitempty"`
-	IsFavourite   bool               `json:"is_favourite"`
-	IsActive      bool               `json:"is_active"`
+	IsFavourite   bool                `json:"is_favourite"`
+	IsActive      bool                `json:"is_active"`
 	Ticker        *format.NullString  `json:"ticker,omitempty"`
 	BuyPrice      *format.NullFloat64 `json:"buy_price,omitempty"`
 	SellPrice     *format.NullFloat64 `json:"sell_price,omitempty"`

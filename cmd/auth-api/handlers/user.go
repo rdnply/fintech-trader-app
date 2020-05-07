@@ -6,16 +6,17 @@ import (
 	"cw1/internal/robot"
 	"cw1/internal/session"
 	"cw1/internal/user"
-	"cw1/pkg/log/logger"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const BottomLineValidID = 0
@@ -98,7 +99,10 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
 	}
 
-	respondJSON(w, http.StatusOK, h.logger, map[string]string{"bearer": token})
+	err = respondJSON(w, http.StatusOK, map[string]string{"bearer": token})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -155,7 +159,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		if fromDB.ID != BottomLineValidID && fromDB.ID == id {
+		if fromDB.ID != BottomLineValidID && fromDB.ID != id {
 			ctx := fmt.Sprintf("New user's email: %v, is already exist", u.Email)
 			s := fmt.Sprintf("user %s is already registered", u.Email)
 
@@ -174,7 +178,10 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 		}
 
 		u.Password = ""
-		respondJSON(w, http.StatusOK, h.logger, u)
+		err = respondJSON(w, http.StatusOK, u)
+		if err != nil {
+			return nil
+		}
 	} else {
 		s := fmt.Sprintf("user %s is already registered", u.Email)
 		return NewHTTPError("Don't contain same token in storage", nil, s, http.StatusNotFound)
@@ -182,6 +189,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+
 
 func initUser(u *user.User, id int64) error {
 	t := format.NewTime()
@@ -259,7 +267,10 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 
 		info := user.NewInfo(u)
 
-		respondJSON(w, http.StatusOK, h.logger, info)
+		err = respondJSON(w, http.StatusOK, info)
+		if err != nil {
+			return nil
+		}
 	} else {
 		s := fmt.Sprintf("user %v is already registered", id)
 		return NewHTTPError("Don't contain same token in storage", err, s, http.StatusNotFound)
@@ -303,7 +314,7 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondWithData(w, r, robots, h.logger)
+	err = respondWithData(w, r, robots, h.tmplts)
 	if err != nil {
 		return err
 	}
@@ -311,27 +322,39 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func respondWithData(w http.ResponseWriter, r *http.Request, rbts []*robot.Robot, l logger.Logger) error {
+func respondWithData(w http.ResponseWriter, r *http.Request, rbts []*robot.Robot, tmplts map[string]*template.Template) error {
 	t := r.Header.Get("Accept")
 
 	if t == "application/json" {
-		respondJSON(w, http.StatusOK, l, rbts)
+		return respondJSON(w, http.StatusOK, rbts)
 	} else if t == "text/html" {
-		//html
-	} else {
-		return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
+		return renderTemplate(w, "index", "base", tmplts, rbts)
 	}
+
+	return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
+}
+
+func renderTemplate(w http.ResponseWriter, name string, template string, tmplts map[string]*template.Template, payload interface{}) error {
+	tmpl, ok := tmplts[name]
+	if !ok {
+		ctx := fmt.Sprintf("Can't find template with name: %v", name)
+		return NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+	}
+	err := tmpl.ExecuteTemplate(w, template, payload)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't execute template with name: %v", name)
+		return NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
 
 	return nil
 }
 
-func respondJSON(w http.ResponseWriter, status int, l logger.Logger, payload interface{}) {
+func respondJSON(w http.ResponseWriter, status int, payload interface{}) error {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		l.Errorf("Can't marshal respond to json: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
+		return NewHTTPError("Can't marshal respond to json", err, "", http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -339,9 +362,9 @@ func respondJSON(w http.ResponseWriter, status int, l logger.Logger, payload int
 
 	c, err := w.Write(response)
 	if err != nil {
-		l.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
+		ctx := fmt.Sprintf("Can't write json data in respond, code: %v", c)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
+
+	return nil
 }

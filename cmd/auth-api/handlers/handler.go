@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
-	"github.com/go-chi/chi"
+	"html/template"
 	"net/http"
+
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
 type Handler struct {
@@ -12,15 +16,43 @@ type Handler struct {
 	userStorage    *postgres.UserStorage
 	sessionStorage *postgres.SessionStorage
 	robotStorage   *postgres.RobotStorage
+	tmplts         map[string]*template.Template
 }
 
-func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage, rt *postgres.RobotStorage) *Handler {
+func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage, rt *postgres.RobotStorage) (*Handler, error) {
+	t, err := parseTemplates()
+	if err != nil {
+		return nil, errors.Wrap(err, "can't parse templates for handler")
+	}
+
 	return &Handler{
 		logger:         logger,
 		userStorage:    ut,
 		sessionStorage: st,
 		robotStorage:   rt,
+		tmplts:         t,
+	}, nil
+}
+
+func parseTemplates() (map[string]*template.Template, error) {
+	funcMap := template.FuncMap{
+		"printInt":   format.PrintNullInt64,
+		"printFloat": format.PrintNullFloat64,
+		"printStr":   format.PrintNullString,
+		"printTime":  format.PrintNullTime,
 	}
+
+	tmplts := make(map[string]*template.Template)
+	var err error
+
+	tmplts["index"], err = template.New("index").Funcs(funcMap).ParseFiles(
+		"C:\\Users\\rodion\\go\\src\\cw1\\internal\\templates\\base.html",
+		"C:\\Users\\rodion\\go\\src\\cw1\\internal\\templates\\index.html")
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't parse index html template")
+	}
+
+	return tmplts, nil
 }
 
 func (h *Handler) Routes() chi.Router {
