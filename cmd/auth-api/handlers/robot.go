@@ -156,3 +156,63 @@ func IDAndTickerFromParams(r *http.Request) (int64, string, error) {
 
 	return id, tickerStr, nil
 }
+
+
+func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
+	rbtID, err := IDFromParams(r)
+	if err != nil {
+		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+	}
+
+	err = checkIDCorrectness(rbtID)
+	if err != nil {
+		return err
+	}
+
+	token := tokenFromReq(r)
+
+	session, err := h.sessionStorage.FindByToken(token)
+	if err != nil {
+		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+	}
+
+	if session.UserID == BottomLineValidID {
+		s := fmt.Sprintf("can't find owner")
+		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	if rbtFromDB.RobotID == BottomLineValidID {
+		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
+		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	rbt := copyForFavourite(rbtFromDB, session.UserID)
+	err = h.robotStorage.Create(rbt)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't create copy for favourite robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	err = respondJSON(w, rbt)
+	if err != nil {
+		return nil
+	}
+
+	return nil
+}
+
+func copyForFavourite(old *robot.Robot, ownerID int64) *robot.Robot {
+	old.OwnerUserID = ownerID
+	old.ParentRobotID = format.NewNullInt64(old.RobotID)
+	old.IsFavourite = true
+	old.IsActive = false
+
+	return old
+}

@@ -13,6 +13,10 @@ type NullInt64 struct {
 	V *sql.NullInt64
 }
 
+func NewNullInt64(n int64) *NullInt64 {
+	return &NullInt64{V: &sql.NullInt64{Int64: n, Valid: true}}
+}
+
 func (ni *NullInt64) Scan(value interface{}) error {
 	var i sql.NullInt64
 	if err := i.Scan(value); err != nil {

@@ -7,7 +7,7 @@ import (
 type Robot struct {
 	RobotID       int64               `json:"robot_id"`
 	OwnerUserID   int64               `json:"owner_user_id"`
-	ParentRobotID *format.NullInt64   `json:"parent_user_id,omitempty"`
+	ParentRobotID *format.NullInt64   `json:"parent_robot_id,omitempty"`
 	IsFavourite   bool                `json:"is_favourite"` //nolint:misspell
 	IsActive      bool                `json:"is_active"`
 	Ticker        *format.NullString  `json:"ticker,omitempty"`

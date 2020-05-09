@@ -68,6 +68,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Post("/robot", rootHandler{h.createRobot, h.logger}.ServeHTTP)
 		r.Delete("/robot/{id}", rootHandler{h.deleteRobot, h.logger}.ServeHTTP)
 		r.Get("/robots", rootHandler{h.getRobots, h.logger}.ServeHTTP)
+		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP)
 	})
 
 	return r
