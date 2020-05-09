@@ -187,7 +187,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	if !canBeActivated(rbtFromDB, userID) {
+	if !canBeChangeActivation(rbtFromDB, userID) || rbtFromDB.IsActive {
 		ctx := fmt.Sprintf("Can activate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't activate robot with id: %v", rbtID)
 		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
@@ -251,8 +251,8 @@ func getRobotAndUserID(sessionStorage session.Storage, r *http.Request) (int64, 
 	return rbtID, session.UserID, nil
 }
 
-func canBeActivated(rbt *robot.Robot, userID int64) bool {
-	if rbt.OwnerUserID != userID || rbt.IsActive || intoPlanRange(rbt.PlanStart, rbt.PlanEnd) {
+func canBeChangeActivation(rbt *robot.Robot, userID int64) bool {
+	if rbt.OwnerUserID != userID || intoPlanRange(rbt.PlanStart, rbt.PlanEnd) {
 		return false
 	}
 
@@ -269,4 +269,37 @@ func intoPlanRange(start *format.NullTime, end *format.NullTime) bool {
 	default:
 		return true
 	}
+}
+
+func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
+	if err != nil {
+		return err
+	}
+
+	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
+	if err != nil {
+		return err
+	}
+
+	if !canBeChangeActivation(rbtFromDB, userID) || !rbtFromDB.IsActive {
+		ctx := fmt.Sprintf("Can deactivate robot with id: %v", rbtID)
+		s := fmt.Sprintf("can't deactivate robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB.IsActive = false
+	rbtFromDB.DeactivatedAt = format.NewNullTime()
+	err = h.robotStorage.Update(rbtFromDB)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	err = respondJSON(w, rbtFromDB)
+	if err != nil {
+		return nil
+	}
+
+	return nil
 }

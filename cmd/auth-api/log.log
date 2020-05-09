@@ -1,5 +1,4 @@
-{"level":"info","ts":"2020-05-10T02:26:17+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
-{"level":"error","ts":"2020-05-10T02:26:25+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 8"}
-{"level":"error","ts":"2020-05-10T02:26:50+03:00","caller":"http/server.go:2007","msg":"Robot with id: 521 doesn't exist"}
-{"level":"error","ts":"2020-05-10T02:26:59+03:00","caller":"http/server.go:2007","msg":"Can't find owner by token"}
-{"level":"info","ts":"2020-05-10T02:46:35+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-10T02:55:51+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"error","ts":"2020-05-10T02:56:21+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 5"}
+{"level":"error","ts":"2020-05-10T02:57:24+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 11"}
+{"level":"info","ts":"2020-05-10T02:58:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
