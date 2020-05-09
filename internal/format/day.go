@@ -4,53 +4,68 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"reflect"
 	"time"
 )
 
 type Day struct {
-	sql.NullTime
+	V *sql.NullTime
 }
 
 const DateLayout = "2006-01-02"
 
-func (b *Day) UnmarshalJSON(data []byte) error {
-	s := string(data)
-	if s == "null" || s == `""` {
-		return nil
-	}
-
+func (d *Day) UnmarshalJSON(b []byte) error {
+	s := string(b)
+	fmt.Println(s)
 	const layout = `"` + DateLayout + `"`
 
 	t, err := time.Parse(layout, s)
+	fmt.Println(t)
 	if err != nil {
-		return fmt.Errorf("can't parse date string: %v", err)
+		d.V.Valid = false
+		return err
 	}
 
-	b.Time = t
+	d.V.Time = t
+	d.V.Valid = true
 
 	return nil
 }
 
-func (b *Day) MarshalJSON() ([]byte, error) {
-	s := b.Time.Format(DateLayout)
-
-	return []byte(s), nil
-}
-
-func (b Day) Value() (driver.Value, error) {
-	return b.Time, nil
-}
-
-func (b *Day) Scan(value interface{}) error {
-	t := value.(time.Time)
-	str := t.Format(DateLayout)
-
-	t, err := time.Parse(DateLayout, str)
-	if err != nil {
-		return fmt.Errorf("can't parse date in scanner for database: %v", err)
+func (d *Day) MarshalJSON() ([]byte, error) {
+	if !d.V.Valid 	{
+		return nil, nil
 	}
 
-	b.Time = t
+	t := d.V.Time
+	f := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+
+	return []byte(f), nil
+}
+
+
+func (d Day) Value() (driver.Value, error) {
+	if !d.V.Valid {
+		return nil, nil
+	}
+
+	return d.V.Time, nil
+}
+
+func (d *Day) Scan(value interface{}) error {
+	var t sql.NullTime
+	if err := t.Scan(value); err != nil {
+		return err
+	}
+
+	if reflect.TypeOf(value) == nil {
+		*d = Day(NullTime{&sql.NullTime{t.Time, false}})
+	} else {
+		*d = Day(NullTime{&sql.NullTime{t.Time, true}})
+	}
 
 	return nil
 }
+
+
+

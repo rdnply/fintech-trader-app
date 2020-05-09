@@ -125,12 +125,17 @@ func NewTime() *NullTime {
 }
 
 func (nt *NullTime) MarshalJSON() ([]byte, error) {
-	if !nt.V.Valid {
+	if !nt.V.Valid 	{
 		return nil, nil
 	}
-	val := fmt.Sprintf("\"%s\"", nt.V.Time.Format(time.RFC3339))
-	return []byte(val), nil
+
+	t := nt.V.Time
+	b := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
+
+	return []byte(`"` + b + `"`), nil
 }
+
 
 func (nt *NullTime) Scan(value interface{}) error {
 	var t sql.NullTime
@@ -154,3 +159,4 @@ func (nt NullTime) Value() (driver.Value, error) {
 
 	return nt.V.Time, nil
 }
+

@@ -265,9 +265,9 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 			return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		info := user.NewInfo(u)
+		//info := user.NewInfo(u)
 
-		err = respondJSON(w, http.StatusOK, info)
+		err = respondJSON(w, http.StatusOK, u)
 		if err != nil {
 			return nil
 		}
