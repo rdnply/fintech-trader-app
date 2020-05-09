@@ -158,7 +158,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if token == s.SessionID {
-		err = h.checkEmail(u.Email, id)
+		err = checkEmail(h.userStorage, u.Email, id)
 		if err != nil {
 			return err
 		}
@@ -186,8 +186,8 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (h *Handler) checkEmail(email string, id int64) error {
-	fromDB, err := h.userStorage.FindByEmail(email)
+func checkEmail(userStorage user.Storage, email string, id int64) error {
+	fromDB, err := userStorage.FindByEmail(email)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't find user with email: %v", email)
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
@@ -204,7 +204,7 @@ func (h *Handler) checkEmail(email string, id int64) error {
 }
 
 func initUser(u *user.User, id int64) error {
-	t := format.NewTime()
+	t := format.NewNullTime()
 	u.ID = id
 	u.UpdatedAt = *t
 

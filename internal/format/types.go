@@ -122,7 +122,7 @@ type NullTime struct {
 	V *sql.NullTime
 }
 
-func NewTime() *NullTime {
+func NewNullTime() *NullTime {
 	return &NullTime{V: &sql.NullTime{Time: time.Now(), Valid: true}}
 }
 

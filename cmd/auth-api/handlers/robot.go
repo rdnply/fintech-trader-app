@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -86,7 +87,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
 
-	rbtFromDB.DeletedAt = format.NewTime()
+	rbtFromDB.DeletedAt = format.NewNullTime()
 
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
@@ -157,7 +158,6 @@ func IDAndTickerFromParams(r *http.Request) (int64, string, error) {
 	return id, tickerStr, nil
 }
 
-
 func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 	rbtID, err := IDFromParams(r)
 	if err != nil {
@@ -215,4 +215,81 @@ func copyForFavourite(old *robot.Robot, ownerID int64) *robot.Robot {
 	old.IsActive = false
 
 	return old
+}
+
+func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
+	rbtID, err := IDFromParams(r)
+	if err != nil {
+		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+	}
+
+	err = checkIDCorrectness(rbtID)
+	if err != nil {
+		return err
+	}
+
+	token := tokenFromReq(r)
+
+	session, err := h.sessionStorage.FindByToken(token)
+	if err != nil {
+		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+	}
+
+	if session.UserID == BottomLineValidID {
+		s := fmt.Sprintf("can't find owner")
+		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	if rbtFromDB.RobotID == BottomLineValidID {
+		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
+		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	if !canBeActivated(rbtFromDB, session.UserID) {
+		ctx := fmt.Sprintf("Can activate robot with id: %v", rbtID)
+		s := fmt.Sprintf("can't activate robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	rbtFromDB.IsActive = true
+	rbtFromDB.ActivatedAt = format.NewNullTime()
+	err = h.robotStorage.Update(rbtFromDB)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	err = respondJSON(w, rbtFromDB)
+	if err != nil {
+		return nil
+	}
+
+	return nil
+}
+
+func canBeActivated(rbt *robot.Robot, userID int64) bool {
+	if rbt.OwnerUserID != userID || rbt.IsActive || intoPlanRange(rbt.PlanStart, rbt.PlanEnd) {
+		return false
+	}
+
+	return true
+}
+
+func intoPlanRange(start *format.NullTime, end *format.NullTime) bool {
+	t := time.Now()
+	switch {
+	case start == nil || end == nil:
+		return false
+	case t.Before(start.V.Time) && t.After(end.V.Time):
+		return false
+	default:
+		return true
+	}
 }
