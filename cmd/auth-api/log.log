@@ -1,1 +1,2 @@
-{"level":"info","ts":"2020-05-09T20:54:28+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-09T21:34:44+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-09T21:34:57+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}

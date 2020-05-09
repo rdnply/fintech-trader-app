@@ -16,11 +16,10 @@ const DateLayout = "2006-01-02"
 
 func (d *Day) UnmarshalJSON(b []byte) error {
 	s := string(b)
-	fmt.Println(s)
+
 	const layout = `"` + DateLayout + `"`
 
 	t, err := time.Parse(layout, s)
-	fmt.Println(t)
 	if err != nil {
 		d.V.Valid = false
 		return err
@@ -33,7 +32,7 @@ func (d *Day) UnmarshalJSON(b []byte) error {
 }
 
 func (d *Day) MarshalJSON() ([]byte, error) {
-	if !d.V.Valid 	{
+	if !d.V.Valid {
 		return nil, nil
 	}
 
@@ -42,7 +41,6 @@ func (d *Day) MarshalJSON() ([]byte, error) {
 
 	return []byte(f), nil
 }
-
 
 func (d Day) Value() (driver.Value, error) {
 	if !d.V.Valid {
@@ -59,13 +57,10 @@ func (d *Day) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*d = Day(NullTime{&sql.NullTime{t.Time, false}})
+		*d = Day(NullTime{V: &sql.NullTime{Time: t.Time, Valid: false}})
 	} else {
-		*d = Day(NullTime{&sql.NullTime{t.Time, true}})
+		*d = Day(NullTime{V: &sql.NullTime{Time: t.Time, Valid: true}})
 	}
 
 	return nil
 }
-
-
-

@@ -12,9 +12,9 @@ var _ session.Storage = &SessionStorage{}
 type SessionStorage struct {
 	statementStorage
 
-	createStmt *sql.Stmt
-	findByID   *sql.Stmt
-	findByToken   *sql.Stmt
+	createStmt  *sql.Stmt
+	findByID    *sql.Stmt
+	findByToken *sql.Stmt
 }
 
 func NewSessionStorage(db *DB) (*SessionStorage, error) {

@@ -13,7 +13,6 @@ type NullInt64 struct {
 	V *sql.NullInt64
 }
 
-
 func (ni *NullInt64) Scan(value interface{}) error {
 	var i sql.NullInt64
 	if err := i.Scan(value); err != nil {
@@ -21,20 +20,20 @@ func (ni *NullInt64) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*ni = NullInt64{V: &sql.NullInt64{i.Int64, false}}
+		*ni = NullInt64{V: &sql.NullInt64{Int64: i.Int64, Valid: false}}
 	} else {
-		*ni = NullInt64{V: &sql.NullInt64{i.Int64, true}}
+		*ni = NullInt64{V: &sql.NullInt64{Int64: i.Int64, Valid: true}}
 	}
 
 	return nil
 }
 
-func (nt NullInt64) Value() (driver.Value, error) {
-	if !nt.V.Valid {
+func (ni NullInt64) Value() (driver.Value, error) {
+	if !ni.V.Valid {
 		return nil, nil
 	}
 
-	return nt.V.Int64, nil
+	return ni.V.Int64, nil
 }
 
 func (ni *NullInt64) MarshalJSON() ([]byte, error) {
@@ -56,20 +55,20 @@ func (nf *NullFloat64) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*nf = NullFloat64{V: &sql.NullFloat64{f.Float64, false}}
+		*nf = NullFloat64{V: &sql.NullFloat64{Float64: f.Float64, Valid: false}}
 	} else {
-		*nf = NullFloat64{V: &sql.NullFloat64{f.Float64, true}}
+		*nf = NullFloat64{V: &sql.NullFloat64{Float64: f.Float64, Valid: true}}
 	}
 
 	return nil
 }
 
-func (nt NullFloat64) Value() (driver.Value, error) {
-	if !nt.V.Valid {
+func (nf NullFloat64) Value() (driver.Value, error) {
+	if !nf.V.Valid {
 		return nil, nil
 	}
 
-	return nt.V.Float64, nil
+	return nf.V.Float64, nil
 }
 
 func (nf *NullFloat64) MarshalJSON() ([]byte, error) {
@@ -80,11 +79,9 @@ func (nf *NullFloat64) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nf.V.Float64)
 }
 
-
 type NullString struct {
 	V *sql.NullString
 }
-
 
 func (ns *NullString) Scan(value interface{}) error {
 	var s sql.NullString
@@ -93,26 +90,27 @@ func (ns *NullString) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*ns = NullString{V: &sql.NullString{s.String, false}}
+		*ns = NullString{V: &sql.NullString{String: s.String, Valid: false}}
 	} else {
-		*ns = NullString{V: &sql.NullString{s.String, true}}
+		*ns = NullString{V: &sql.NullString{String: s.String, Valid: true}}
 	}
 
 	return nil
 }
 
-func (nt NullString) Value() (driver.Value, error) {
-	if !nt.V.Valid {
+func (ns NullString) Value() (driver.Value, error) {
+	if !ns.V.Valid {
 		return nil, nil
 	}
 
-	return nt.V.String, nil
+	return ns.V.String, nil
 }
 
 func (ns *NullString) MarshalJSON() ([]byte, error) {
 	if !ns.V.Valid {
 		return json.Marshal("\"\"")
 	}
+
 	return json.Marshal(ns.V.String)
 }
 
@@ -121,11 +119,11 @@ type NullTime struct {
 }
 
 func NewTime() *NullTime {
-	return &NullTime{&sql.NullTime{time.Now(), true}}
+	return &NullTime{V: &sql.NullTime{Time: time.Now(), Valid: true}}
 }
 
 func (nt *NullTime) MarshalJSON() ([]byte, error) {
-	if !nt.V.Valid 	{
+	if !nt.V.Valid {
 		return nil, nil
 	}
 
@@ -136,7 +134,6 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + b + `"`), nil
 }
 
-
 func (nt *NullTime) Scan(value interface{}) error {
 	var t sql.NullTime
 	if err := t.Scan(value); err != nil {
@@ -144,9 +141,9 @@ func (nt *NullTime) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*nt = NullTime{V: &sql.NullTime{t.Time, false}}
+		*nt = NullTime{V: &sql.NullTime{Time: t.Time, Valid: false}}
 	} else {
-		*nt = NullTime{V: &sql.NullTime{t.Time, true}}
+		*nt = NullTime{V: &sql.NullTime{Time: t.Time, Valid: true}}
 	}
 
 	return nil
@@ -159,4 +156,3 @@ func (nt NullTime) Value() (driver.Value, error) {
 
 	return nt.V.Time, nil
 }
-

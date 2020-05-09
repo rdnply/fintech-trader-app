@@ -43,6 +43,7 @@ func parseTemplates() (map[string]*template.Template, error) {
 	}
 
 	tmplts := make(map[string]*template.Template)
+
 	var err error
 
 	tmplts["index"], err = template.New("index").Funcs(funcMap).ParseFiles(

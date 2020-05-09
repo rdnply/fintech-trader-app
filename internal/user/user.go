@@ -26,6 +26,7 @@ type Storage interface {
 
 func (u *User) MarshalJSON() ([]byte, error) {
 	var birthday *string
+
 	if u.Birthday.V.Valid {
 		t := u.Birthday.V.Time
 		b := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())

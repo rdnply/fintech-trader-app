@@ -19,20 +19,7 @@ import (
 )
 
 func main() {
-	config := logger.Configuration{
-		EnableConsole:     true,
-		ConsoleLevel:      logger.Debug,
-		ConsoleJSONFormat: true,
-		EnableFile:        true,
-		FileLevel:         logger.Info,
-		FileJSONFormat:    true,
-		FileLocation:      "log.log",
-	}
-
-	logger, err := logger.New(config, logger.InstanceZapLogger)
-	if err != nil {
-		log.Fatal("could not instantiate logger: ", err)
-	}
+	logger := initLogger()
 
 	db, err := postgres.New(logger, "C:\\Users\\rodion\\go\\src\\cw1\\configuration.json")
 	if err != nil {
@@ -86,6 +73,12 @@ func main() {
 	}
 }
 
+func handleCloser(l logger.Logger, resource string, closer io.Closer) {
+	if err := closer.Close(); err != nil {
+		l.Errorf("Can't close %q: %s", resource, err)
+	}
+}
+
 func routes(h *handlers.Handler) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -98,12 +91,6 @@ func routes(h *handlers.Handler) *chi.Mux {
 	r.Mount("/", h.Routes())
 
 	return r
-}
-
-func handleCloser(l logger.Logger, resource string, closer io.Closer) {
-	if err := closer.Close(); err != nil {
-		l.Errorf("Can't close %q: %s", resource, err)
-	}
 }
 
 func gracefulShutdown(srv *http.Server, timeout time.Duration, logger logger.Logger) {
@@ -120,4 +107,23 @@ func gracefulShutdown(srv *http.Server, timeout time.Duration, logger logger.Log
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatalf("Could not shutdown server:%v", err)
 	}
+}
+
+func initLogger() logger.Logger {
+	config := logger.Configuration{
+		EnableConsole:     true,
+		ConsoleLevel:      logger.Debug,
+		ConsoleJSONFormat: true,
+		EnableFile:        true,
+		FileLevel:         logger.Info,
+		FileJSONFormat:    true,
+		FileLocation:      "log.log",
+	}
+
+	logger, err := logger.New(config, logger.InstanceZapLogger)
+	if err != nil {
+		log.Fatal("could not instantiate logger: ", err)
+	}
+
+	return logger
 }

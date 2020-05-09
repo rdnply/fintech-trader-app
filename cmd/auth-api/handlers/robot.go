@@ -142,6 +142,7 @@ func IDAndTickerFromParams(r *http.Request) (int64, string, error) {
 	userStr := r.URL.Query().Get("user")
 
 	var id int64 = BottomLineValidID
+
 	if userStr != "" {
 		var err error
 
