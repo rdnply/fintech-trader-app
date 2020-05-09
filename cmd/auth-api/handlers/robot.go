@@ -3,6 +3,7 @@ package handlers
 import (
 	"cw1/internal/format"
 	"cw1/internal/robot"
+	"cw1/internal/session"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -45,44 +46,26 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
-	rbtID, err := IDFromParams(r)
-	if err != nil {
-		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
-	}
-
-	err = checkIDCorrectness(rbtID)
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
 	if err != nil {
 		return err
 	}
 
-	token := tokenFromReq(r)
-
-	u, err := h.sessionStorage.FindByToken(token)
+	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
 	if err != nil {
-		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return err
 	}
 
-	if u.UserID == BottomLineValidID {
-		s := fmt.Sprintf("can't find owner")
-		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
-	}
-
-	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
-	if err != nil {
-		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
-	}
-
-	if rbtFromDB.RobotID == BottomLineValidID || rbtFromDB.DeletedAt.V.Valid {
+	if rbtFromDB.DeletedAt.V.Valid {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
 		s := fmt.Sprintf("robot with id %v don't exist", rbtID)
 
 		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
 	}
 
-	if rbtFromDB.OwnerUserID != u.UserID {
-		ctx := fmt.Sprintf("User with id: %v don't own robot with id: %v", u.UserID, rbtFromDB.RobotID)
-		s := fmt.Sprintf("user with id %v don't own robot with id: %v", u.UserID, rbtID)
+	if rbtFromDB.OwnerUserID != userID {
+		ctx := fmt.Sprintf("User with id: %v don't own robot with id: %v", userID, rbtFromDB.RobotID)
+		s := fmt.Sprintf("user with id %v don't own robot with id: %v", userID, rbtID)
 
 		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
@@ -159,41 +142,17 @@ func IDAndTickerFromParams(r *http.Request) (int64, string, error) {
 }
 
 func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
-	rbtID, err := IDFromParams(r)
-	if err != nil {
-		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
-	}
-
-	err = checkIDCorrectness(rbtID)
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
 	if err != nil {
 		return err
 	}
 
-	token := tokenFromReq(r)
-
-	session, err := h.sessionStorage.FindByToken(token)
+	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
 	if err != nil {
-		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return err
 	}
 
-	if session.UserID == BottomLineValidID {
-		s := fmt.Sprintf("can't find owner")
-		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
-	}
-
-	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
-	if err != nil {
-		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
-	}
-
-	if rbtFromDB.RobotID == BottomLineValidID {
-		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
-		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
-	}
-
-	rbt := copyForFavourite(rbtFromDB, session.UserID)
+	rbt := copyForFavourite(rbtFromDB, userID)
 	err = h.robotStorage.Create(rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for favourite robot with id: %v", rbtID)
@@ -218,41 +177,17 @@ func copyForFavourite(old *robot.Robot, ownerID int64) *robot.Robot {
 }
 
 func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
-	rbtID, err := IDFromParams(r)
-	if err != nil {
-		return NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
-	}
-
-	err = checkIDCorrectness(rbtID)
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
 	if err != nil {
 		return err
 	}
 
-	token := tokenFromReq(r)
-
-	session, err := h.sessionStorage.FindByToken(token)
+	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
 	if err != nil {
-		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return err
 	}
 
-	if session.UserID == BottomLineValidID {
-		s := fmt.Sprintf("can't find owner")
-		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
-	}
-
-	rbtFromDB, err := h.robotStorage.FindByID(rbtID)
-	if err != nil {
-		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
-	}
-
-	if rbtFromDB.RobotID == BottomLineValidID {
-		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
-		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
-	}
-
-	if !canBeActivated(rbtFromDB, session.UserID) {
+	if !canBeActivated(rbtFromDB, userID) {
 		ctx := fmt.Sprintf("Can activate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't activate robot with id: %v", rbtID)
 		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
@@ -272,6 +207,48 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return nil
+}
+
+func getRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
+	rbtFromDB, err := robotStorage.FindByID(rbtID)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
+		return nil, NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	if rbtFromDB.RobotID == BottomLineValidID {
+		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
+		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
+		return nil, NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	return rbtFromDB, nil
+}
+
+func getRobotAndUserID(sessionStorage session.Storage, r *http.Request) (int64, int64, error) {
+	rbtID, err := IDFromParams(r)
+	if err != nil {
+		return -1, -1, NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+	}
+
+	err = checkIDCorrectness(rbtID)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	token := tokenFromReq(r)
+
+	session, err := sessionStorage.FindByToken(token)
+	if err != nil {
+		return -1, -1, NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+	}
+
+	if session.UserID == BottomLineValidID {
+		s := fmt.Sprintf("can't find owner")
+		return -1, -1, NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+	}
+
+	return rbtID, session.UserID, nil
 }
 
 func canBeActivated(rbt *robot.Robot, userID int64) bool {
