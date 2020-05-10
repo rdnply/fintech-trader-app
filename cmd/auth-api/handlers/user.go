@@ -326,7 +326,7 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondWithData(w, r, robots, h.tmplts)
+	err = respondWithData(w, r,  h.tmplts, robots...)
 	if err != nil {
 		return err
 	}
@@ -334,16 +334,17 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func respondWithData(w http.ResponseWriter, r *http.Request, rbts []*robot.Robot, tmplts map[string]*template.Template) error {
+func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*template.Template, rbts ...*robot.Robot) error {
 	t := r.Header.Get("Accept")
 
-	if t == "application/json" {
+	switch t {
+	case "application/json":
 		return respondJSON(w, rbts)
-	} else if t == "text/html" {
+	case "text/html":
 		return renderTemplate(w, "index", "base", tmplts, rbts)
+	default:
+		return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
 	}
-
-	return NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
 }
 
 func renderTemplate(w http.ResponseWriter, name string, template string, tmplts map[string]*template.Template, payload interface{}) error {

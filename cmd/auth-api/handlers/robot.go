@@ -51,7 +51,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
+	rbtFromDB, err := findRobot(h.robotStorage, rbtID)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (h *Handler) getRobots(w http.ResponseWriter, r *http.Request) error {
 		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondWithData(w, r, robots, h.tmplts)
+	err = respondWithData(w, r, h.tmplts, robots...)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
+	rbtFromDB, err := findRobot(h.robotStorage, rbtID)
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
+	rbtFromDB, err := findRobot(h.robotStorage, rbtID)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func getRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
+func findRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
 	rbtFromDB, err := robotStorage.FindByID(rbtID)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
@@ -277,7 +277,7 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	rbtFromDB, err := getRobot(h.robotStorage, rbtID)
+	rbtFromDB, err := findRobot(h.robotStorage, rbtID)
 	if err != nil {
 		return err
 	}
@@ -303,3 +303,29 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+
+func (h *Handler) getRobot(w http.ResponseWriter, r *http.Request) error {
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
+	if err != nil {
+		return err
+	}
+
+	rbtFromDB, err := findRobot(h.robotStorage, rbtID)
+	if err != nil {
+		return err
+	}
+
+	if rbtFromDB.OwnerUserID != userID {
+		ctx := fmt.Sprintf("Can get robot with id: %v for user with id: %v", rbtID, userID)
+		s := fmt.Sprintf("user with id: %v don't have permission to get robot with id: %v", userID, rbtID)
+		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+	}
+
+	err = respondWithData(w, r, h.tmplts, rbtFromDB)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
