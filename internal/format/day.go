@@ -9,7 +9,7 @@ import (
 )
 
 type Day struct {
-	V *sql.NullTime
+	V sql.NullTime
 }
 
 const DateLayout = "2006-01-02"
@@ -57,9 +57,9 @@ func (d *Day) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*d = Day(NullTime{V: &sql.NullTime{Time: t.Time, Valid: false}})
+		*d = Day(NullTime{V: sql.NullTime{Time: t.Time, Valid: false}})
 	} else {
-		*d = Day(NullTime{V: &sql.NullTime{Time: t.Time, Valid: true}})
+		*d = Day(NullTime{V: sql.NullTime{Time: t.Time, Valid: true}})
 	}
 
 	return nil

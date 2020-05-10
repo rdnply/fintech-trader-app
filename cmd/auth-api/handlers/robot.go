@@ -329,3 +329,42 @@ func (h *Handler) getRobot(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
+	var rbt robot.Robot
+
+	err := json.NewDecoder(r.Body).Decode(&rbt)
+	if err != nil {
+		return NewHTTPError("Can't unmarshal input json for update robot", err, "", http.StatusBadRequest)
+	}
+
+	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
+	if err != nil {
+		return err
+	}
+
+	rbtFromID, err := findRobot(h.robotStorage, rbtID)
+	if err != nil {
+		return err
+	}
+
+	if rbtFromID.OwnerUserID != userID {
+		ctx := fmt.Sprintf("User with id: %v can't update robot with id: %v", userID, rbtID)
+		s := fmt.Sprintf("user with id: %v don't have permission to update robot with id: %v", rbtID)
+		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+	}
+
+	rbt.RobotID = rbtID
+	err = h.robotStorage.Update(&rbt)
+	if err != nil {
+		ctx := fmt.Sprintf("Can't update  robot with id: %v in storage", rbtID)
+		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+	}
+
+	err = respondJSON(w, rbt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
