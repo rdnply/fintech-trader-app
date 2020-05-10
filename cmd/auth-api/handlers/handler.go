@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"cw1/cmd/auth-api/handlers/websocket"
+	"cw1/cmd/auth-api/httperror"
 	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
@@ -16,10 +18,11 @@ type Handler struct {
 	userStorage    *postgres.UserStorage
 	sessionStorage *postgres.SessionStorage
 	robotStorage   *postgres.RobotStorage
+	hub            *websocket.Hub
 	tmplts         map[string]*template.Template
 }
 
-func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage, rt *postgres.RobotStorage) (*Handler, error) {
+func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage, rt *postgres.RobotStorage, hb *websocket.Hub) (*Handler, error) {
 	t, err := parseTemplates()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't parse templates for handler")
@@ -31,15 +34,17 @@ func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.Ses
 		sessionStorage: st,
 		robotStorage:   rt,
 		tmplts:         t,
+		hub:            hb,
 	}, nil
 }
 
 func parseTemplates() (map[string]*template.Template, error) {
 	funcMap := template.FuncMap{
-		"printInt":   format.PrintNullInt64,
-		"printFloat": format.PrintNullFloat64,
-		"printStr":   format.PrintNullString,
-		"printTime":  format.PrintNullTime,
+		"printInt":      format.PrintNullInt64,
+		"printFloat":    format.PrintNullFloat64,
+		"printStr":      format.PrintNullString,
+		"printTime":     format.PrintNullTime,
+		"joinNullInt":   format.JoinNullInt,
 	}
 
 	tmplts := make(map[string]*template.Template)
@@ -73,6 +78,10 @@ func (h *Handler) Routes() chi.Router {
 		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
 		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
 		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
+
+		r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
+			return websocket.ServeWS(h.hub, w, r)
+		}, h.logger}.ServeHTTP)
 	})
 
 	return r
@@ -89,7 +98,7 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientError, ok := err.(ClientError)
+	clientError, ok := err.(httperror.ClientError)
 	if !ok {
 		fn.logger.Errorf("Can't cast error to Client's error: %v", clientError)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -108,7 +117,6 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status, headers := clientError.ResponseHeaders()
-
 	for k, v := range headers {
 		if body == nil && v == "application/json" {
 			continue

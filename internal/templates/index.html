@@ -1,47 +1,74 @@
 {{define "head"}}<title>Роботы</title>{{end}}
 {{define "body"}}
-    <div>
-        <table border="1">
-            <tr>
-                <th>Идентификатор робота</th>
-                <th>Владелец робота</th>
-                <th>Идентификатор родителя</th>
-                <th>Избранное</th>
-                <th>Активность</th>
-                <th>Тикер</th>
-                <th>Цена покупки</th>
-                <th>Цена продажи</th>
-                <th>Плановая дата запуска</th>
-                <th>Плановая дата остановки</th>
-                <th>Плановая доходность</th>
-                <th>Фактическая доходность</th>
-                <th>Кол-во сделок</th>
-                <th>Дата активации</th>
-                <th>Дата деактивации</th>
-                <th>Дата регистрации</th>
-                <th>Дата удаления</th>
-            </tr>
-            {{range $ind, $el := . }}
-                <tr>
-                    <td>{{$el.RobotID}}</td>
-                    <td>{{$el.OwnerUserID  }}</td>
-                    <td>{{$el.ParentRobotID | printInt}}</td>
-                    <td>{{$el.IsFavourite  }}</td>
-                    <td>{{$el.IsActive     }}</td>
-                    <td>{{$el.Ticker     | printStr  }}</td>
-                    <td>{{$el.BuyPrice   | printFloat }}</td>
-                    <td>{{$el.SellPrice  | printFloat  }}</td>
-                    <td>{{$el.PlanStart  | printTime  }}</td>
-                    <td>{{$el.PlanEnd    | printTime  }}</td>
-                    <td>{{$el.PlanYield  | printFloat  }}</td>
-                    <td>{{$el.FactYield  | printFloat  }}</td>
-                    <td>{{$el.DealsCount | printInt  }}</td>
-                    <td>{{$el.ActivatedAt | printTime  }}</td>
-                    <td>{{$el.DeactivatedAt | printTime}}</td>
-                    <td>{{$el.CreatedAt  | printTime  }}</td>
-                    <td>{{$el.DeletedAt  | printTime  }}</td>
-                </tr>
-            {{end}}
-        </table>
-    </div>
+<script type="text/javascript">
+    var ws = new WebSocket("ws://localhost:5000/ws");
+    ws.onopen = function () {
+        console.log("WS is opened");
+    };
+
+    ws.onmessage = function (evt) {
+        var msg = JSON.parse(evt.data);
+        console.log(evt.data);
+        var row = document.getElementById("robot_" + msg.robot_id)
+        console.log("robot_" + msg.robot_id);
+        for (var i = 0, col; col = row.cells[i]; i++) {
+            console.log(msg[col.id]);
+            if (msg.hasOwnProperty(col.id)) {
+                col.innerHTML = "<pre>" + msg[col.id] + "</pre>";
+            }
+        }
+
+    };
+
+    ws.onclose = function () {
+        console.log("WS is closed");
+    };
+</script>
+
+<div>
+    <table border="1">
+        <tr>
+            <th>Идентификатор робота</th>
+            <th>Владелец робота</th>
+            <th>Идентификатор родителя</th>
+            <th>Избранное</th>
+            <th>Активность</th>
+            <th>Тикер</th>
+            <th>Цена покупки</th>
+            <th>Цена продажи</th>
+            <th>Плановая дата запуска</th>
+            <th>Плановая дата остановки</th>
+            <th>Плановая доходность</th>
+            <th>Фактическая доходность</th>
+            <th>Кол-во сделок</th>
+            <th>Дата активации</th>
+            <th>Дата деактивации</th>
+            <th>Дата регистрации</th>
+            <th>Дата удаления</th>
+        </tr>
+        {{range $ind, $el := . }}
+        <tr>
+            <div id="{{printf "robot_%d" .RobotID}}">
+                <td id="robot_id">{{$el.RobotID}}</td>
+                <td id="owner_user_id">{{$el.OwnerUserID  }}</td>
+                <td id="parent_robot_id">{{$el.ParentRobotID | printInt}}</td>
+                <td id="is_favourite">{{$el.IsFavourite  }}</td>
+                <td id="is_active">{{$el.IsActive     }}</td>
+                <td id="ticker">{{$el.Ticker | printStr }}</td>
+                <td id="buy_price">{{$el.BuyPrice   | printFloat }}</td>
+                <td id="sell_price">{{$el.SellPrice  | printFloat  }}</td>
+                <td id="plan_start">{{$el.PlanStart  | printTime  }}</td>
+                <td id="plan_end">{{$el.PlanEnd    | printTime  }}</td>
+                <td id="plan_yield">{{$el.PlanYield  | printFloat  }}</td>
+                <td id="fact_yield">{{$el.FactYield  | printFloat  }}</td>
+                <td id="deals_count">{{$el.DealsCount | printInt  }}</td>
+                <td id="activated_at">{{$el.ActivatedAt | printTime  }}</td>
+                <td id="deactivated_at">{{$el.DeactivatedAt | printTime}}</td>
+                <td id="created_at">{{$el.CreatedAt  | printTime  }}</td>
+                <td id="deleted_at">{{$el.DeletedAt  | printTime  }}</td>
+            </div>
+        </tr>
+        {{end}}
+    </table>
+</div>
 {{end}}

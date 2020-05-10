@@ -1,18 +1,19 @@
 package main
 
 import (
-	"cw1/internal/format"
-	"encoding/json"
 	"fmt"
+	"time"
 )
 
-func main() {
-	//json := "{\"isfavourite\" : false,\"is_active\": false}"
-	//var null format.NullInt64
-	var null format.NullInt64
-	err := json.Unmarshal([]byte("400"), &null)
-	if err != nil {
-		fmt.Errorf("error")
+func f() {
+	for i := 0; i < 1000; i++ {
+		fmt.Println(i)
 	}
-	fmt.Println(null)
+}
+
+func main() {
+	fmt.Println("START")
+	go f()
+	fmt.Println("END")
+	time.Sleep(100000)
 }

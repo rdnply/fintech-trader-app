@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"cw1/cmd/auth-api/handlers"
+	"cw1/cmd/auth-api/handlers/websocket"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
 	"io"
@@ -54,7 +55,10 @@ func main() {
 
 	defer handleCloser(logger, "robot_storage", sessionStorage)
 
-	h, err := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage)
+	hub := websocket.NewHub()
+	go hub.Run()
+
+	h, err := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage, hub)
 	if err != nil {
 		logger.Fatalf("Can't create new handler: %s", err)
 	}

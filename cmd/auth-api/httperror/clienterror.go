@@ -1,4 +1,4 @@
-package handlers
+package httperror
 
 type ClientError interface {
 	Error() string

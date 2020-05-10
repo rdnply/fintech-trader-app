@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"cw1/cmd/auth-api/httperror"
 	"cw1/internal/format"
 	"cw1/internal/robot"
 	"cw1/internal/session"
@@ -18,26 +19,26 @@ func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) error {
 
 	err := json.NewDecoder(r.Body).Decode(&rbt)
 	if err != nil {
-		return NewHTTPError("Can't unmarshal input json for creating robot", err, "", http.StatusBadRequest)
+		return httperror.NewHTTPError("Can't unmarshal input json for creating robot", err, "", http.StatusBadRequest)
 	}
 
 	token := tokenFromReq(r)
 
 	s, err := h.sessionStorage.FindByToken(token)
 	if err != nil {
-		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
 	}
 
 	if s.UserID == BottomLineValidID {
 		s := fmt.Sprintf("can't find owner")
-		return NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+		return httperror.NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
 	}
 
 	rbt.OwnerUserID = s.UserID
 
 	err = h.robotStorage.Create(&rbt)
 	if err != nil {
-		return NewHTTPError("Can't create robot record in storage", err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError("Can't create robot record in storage", err, "", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -60,14 +61,14 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
 		s := fmt.Sprintf("robot with id %v don't exist", rbtID)
 
-		return NewHTTPError(ctx, nil, s, http.StatusNotFound)
+		return httperror.NewHTTPError(ctx, nil, s, http.StatusNotFound)
 	}
 
 	if rbtFromDB.OwnerUserID != userID {
 		ctx := fmt.Sprintf("User with id: %v don't own robot with id: %v", userID, rbtFromDB.RobotID)
 		s := fmt.Sprintf("user with id %v don't own robot with id: %v", userID, rbtID)
 
-		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
 
 	rbtFromDB.DeletedAt = format.NewNullTime()
@@ -75,7 +76,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't delete robot from storage with rbtID: %v", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -86,32 +87,32 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 func (h *Handler) getRobots(w http.ResponseWriter, r *http.Request) error {
 	ownerID, ticker, err := IDAndTickerFromParams(r)
 	if err != nil {
-		return NewHTTPError("Can't get user's id and/or ticker from URL params", err, "", http.StatusBadRequest)
+		return httperror.NewHTTPError("Can't get user's id and/or ticker from URL params", err, "", http.StatusBadRequest)
 	}
 
 	if ownerID < BottomLineValidID {
 		ctx := fmt.Sprintf("Don't valid ID: %v", ownerID)
 		s := fmt.Sprintf("incorrect id: %v", ownerID)
 
-		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
 
 	token := tokenFromReq(r)
 
 	u, err := h.sessionStorage.FindByToken(token)
 	if err != nil {
-		return NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
 	}
 
 	if u.UserID == BottomLineValidID {
 		s := fmt.Sprintf("can't find user")
-		return NewHTTPError("Can't find user by token", nil, s, http.StatusBadRequest)
+		return httperror.NewHTTPError("Can't find user by token", nil, s, http.StatusBadRequest)
 	}
 
 	robots, err := h.robotStorage.GetAll(ownerID, ticker)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't get robots from storage (owner's id: %v, ticker: %v)", ownerID, ticker)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
 	err = respondWithData(w, r, h.tmplts, robots...)
@@ -156,13 +157,15 @@ func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 	err = h.robotStorage.Create(rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for favourite robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondJSON(w, rbt)
+	resp, err := respondJSON(w, rbt)
 	if err != nil {
 		return nil
 	}
+
+	h.hub.Broadcast(resp)
 
 	return nil
 }
@@ -190,7 +193,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 	if !canBeChangeActivation(rbtFromDB, userID) || rbtFromDB.IsActive {
 		ctx := fmt.Sprintf("Can activate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't activate robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	rbtFromDB.IsActive = true
@@ -198,13 +201,15 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondJSON(w, rbtFromDB)
+	resp, err := respondJSON(w, rbtFromDB)
 	if err != nil {
 		return nil
 	}
+
+	h.hub.Broadcast(resp)
 
 	return nil
 }
@@ -213,13 +218,13 @@ func findRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
 	rbtFromDB, err := robotStorage.FindByID(rbtID)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
-		return nil, NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return nil, httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
 	if rbtFromDB.RobotID == BottomLineValidID {
 		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
 		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
-		return nil, NewHTTPError(ctx, err, s, http.StatusBadRequest)
+		return nil, httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	return rbtFromDB, nil
@@ -228,7 +233,7 @@ func findRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
 func getRobotAndUserID(sessionStorage session.Storage, r *http.Request) (int64, int64, error) {
 	rbtID, err := IDFromParams(r)
 	if err != nil {
-		return -1, -1, NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+		return -1, -1, httperror.NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
 	}
 
 	err = checkIDCorrectness(rbtID)
@@ -240,12 +245,12 @@ func getRobotAndUserID(sessionStorage session.Storage, r *http.Request) (int64, 
 
 	session, err := sessionStorage.FindByToken(token)
 	if err != nil {
-		return -1, -1, NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
+		return -1, -1, httperror.NewHTTPError("Can't find owner by token in storage", err, "", http.StatusInternalServerError)
 	}
 
 	if session.UserID == BottomLineValidID {
 		s := fmt.Sprintf("can't find owner")
-		return -1, -1, NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
+		return -1, -1, httperror.NewHTTPError("Can't find owner by token", nil, s, http.StatusBadRequest)
 	}
 
 	return rbtID, session.UserID, nil
@@ -285,7 +290,7 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 	if !canBeChangeActivation(rbtFromDB, userID) || !rbtFromDB.IsActive {
 		ctx := fmt.Sprintf("Can deactivate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't deactivate robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	rbtFromDB.IsActive = false
@@ -293,13 +298,15 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondJSON(w, rbtFromDB)
+	resp, err := respondJSON(w, rbtFromDB)
 	if err != nil {
 		return nil
 	}
+
+	h.hub.Broadcast(resp)
 
 	return nil
 }
@@ -318,7 +325,7 @@ func (h *Handler) getRobot(w http.ResponseWriter, r *http.Request) error {
 	if rbtFromDB.OwnerUserID != userID {
 		ctx := fmt.Sprintf("Can get robot with id: %v for user with id: %v", rbtID, userID)
 		s := fmt.Sprintf("user with id: %v don't have permission to get robot with id: %v", userID, rbtID)
-		return NewHTTPError(ctx, err, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	err = respondWithData(w, r, h.tmplts, rbtFromDB)
@@ -334,7 +341,7 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 
 	err := json.NewDecoder(r.Body).Decode(&rbt)
 	if err != nil {
-		return NewHTTPError("Can't unmarshal input json for update robot", err, "", http.StatusBadRequest)
+		return httperror.NewHTTPError("Can't unmarshal input json for update robot", err, "", http.StatusBadRequest)
 	}
 
 	rbtID, userID, err := getRobotAndUserID(h.sessionStorage, r)
@@ -350,20 +357,22 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 	if rbtFromID.OwnerUserID != userID {
 		ctx := fmt.Sprintf("User with id: %v can't update robot with id: %v", userID, rbtID)
 		s := fmt.Sprintf("user with id: %v don't have permission to update robot with id: %v", rbtID)
-		return NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
 
 	rbt.RobotID = rbtID
 	err = h.robotStorage.Update(&rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't update  robot with id: %v in storage", rbtID)
-		return NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondJSON(w, rbt)
+	resp, err := respondJSON(w, rbt)
 	if err != nil {
 		return err
 	}
+
+	h.hub.Broadcast(resp)
 
 	return nil
 }

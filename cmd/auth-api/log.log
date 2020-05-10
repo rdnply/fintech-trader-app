@@ -1,1 +1,3 @@
-{"level":"info","ts":"2020-05-10T12:18:32+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-10T23:39:51+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"error","ts":"2020-05-10T23:40:58+03:00","caller":"http/server.go:2007","msg":"Can deactivate robot with id: 8"}
+{"level":"info","ts":"2020-05-10T23:43:58+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}

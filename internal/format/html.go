@@ -2,6 +2,7 @@ package format
 
 import (
 	"fmt"
+	"strconv"
 )
 
 func PrintNullInt64(n *NullInt64) string {
@@ -17,7 +18,7 @@ func PrintNullFloat64(n *NullFloat64) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%f", n.V.Float64)
+	return fmt.Sprintf("%2f", n.V.Float64)
 }
 
 func PrintNullString(n *NullString) string {
@@ -37,3 +38,12 @@ func PrintNullTime(n *NullTime) string {
 
 	return n.V.Time.Format(layout)
 }
+
+func JoinNullInt(s string , n *NullInt64) string {
+	if n == nil || !n.V.Valid {
+		return ""
+	}
+
+	return s +  strconv.FormatInt(n.V.Int64, 64)
+}
+

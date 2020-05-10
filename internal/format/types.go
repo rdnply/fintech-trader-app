@@ -64,64 +64,6 @@ func (ni *NullInt64) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//func NewNullInt64(n int64) *NullInt64 {
-//	return &NullInt64{V: &sql.NullInt64{Int64: n, Valid: true}}
-//}
-//
-//func (ni *NullInt64) Scan(value interface{}) error {
-//	var i sql.NullInt64
-//	if err := i.Scan(value); err != nil {
-//		return err
-//	}
-//
-//	if reflect.TypeOf(value) == nil {
-//		*ni = NullInt64{V: &sql.NullInt64{Int64: i.Int64, Valid: false}}
-//	} else {
-//		*ni = NullInt64{V: &sql.NullInt64{Int64: i.Int64, Valid: true}}
-//	}
-//
-//	return nil
-//}
-//
-//func (ni NullInt64) Value() (driver.Value, error) {
-//	if !ni.V.Valid {
-//		return nil, nil
-//	}
-//
-//	return ni.V.Int64, nil
-//}
-//
-//func (ni *NullInt64) MarshalJSON() ([]byte, error) {
-//	if !ni.V.Valid {
-//		return nil, nil
-//	}
-//
-//	return json.Marshal(ni.V.Int64)
-//}
-//
-//func (ni *NullInt64) UnmarshalJSON(b []byte) error {
-//	var x *int64
-//	if err := json.Unmarshal(b, &x); err != nil {
-//		return err
-//	}
-//
-//	if x != nil {
-//		ni.V.Valid = true
-//		ni.V.Int64 = *x
-//	} else {
-//		ni.V.Valid = false
-//	}
-//
-//	return nil
-//}
-
-//func (ni *NullInt64) UnmarshalJSON(b []byte) error {
-//	err := json.Unmarshal(b, &ni.V.Int64)
-//	ni.V.Valid = err == nil
-//
-//	return err
-//}
-
 type NullFloat64 struct {
 	V sql.NullFloat64
 }
@@ -236,7 +178,6 @@ func (nt NullTime) Value() (driver.Value, error) {
 	return nt.V.Time, nil
 }
 
-
 func (nt *NullTime) MarshalJSON() ([]byte, error) {
 	if !nt.V.Valid {
 		return nil, nil
@@ -252,7 +193,7 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 func (nt *NullTime) UnmarshalJSON(b []byte) error {
 	s := string(b)
 
-	t, err := time.Parse(`"` + time.RFC3339 + `"`, s)
+	t, err := time.Parse(`"`+time.RFC3339+`"`, s)
 	if err != nil {
 		nt.V.Valid = false
 		return err
