@@ -78,11 +78,10 @@ func (h *Handler) Routes() chi.Router {
 		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
 		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
 		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
-
-		r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
-			return websocket.ServeWS(h.hub, w, r)
-		}, h.logger}.ServeHTTP)
 	})
+	r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
+		return websocket.ServeWS(h.hub, w, r)
+	}, h.logger}.ServeHTTP)
 
 	return r
 }
@@ -116,7 +115,8 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, headers := clientError.ResponseHeaders()
+	//status, headers := clientError.ResponseHeaders()
+	_, headers := clientError.ResponseHeaders()
 	for k, v := range headers {
 		if body == nil && v == "application/json" {
 			continue
@@ -125,7 +125,7 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(k, v)
 	}
 
-	w.WriteHeader(status)
+	//w.WriteHeader(status)
 
 	c, err := w.Write(body)
 	if err != nil {

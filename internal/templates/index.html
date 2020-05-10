@@ -1,27 +1,39 @@
 {{define "head"}}<title>Роботы</title>{{end}}
 {{define "body"}}
 <script type="text/javascript">
-    var ws = new WebSocket("ws://localhost:5000/ws");
-    ws.onopen = function () {
-        console.log("WS is opened");
-    };
+    window.onload = function () {
+        if (window["WebSocket"]) {
+            conn = new WebSocket("ws://localhost:5000/ws");
 
-    ws.onmessage = function (evt) {
-        var msg = JSON.parse(evt.data);
-        console.log(evt.data);
-        var row = document.getElementById("robot_" + msg.robot_id)
-        console.log("robot_" + msg.robot_id);
-        for (var i = 0, col; col = row.cells[i]; i++) {
-            console.log(msg[col.id]);
-            if (msg.hasOwnProperty(col.id)) {
-                col.innerHTML = "<pre>" + msg[col.id] + "</pre>";
-            }
+            conn.onopen = function () {
+                console.log("WS is opened");
+            };
+
+            conn.onclose = function (evt) {
+                console.log("WS is closed");
+            };
+
+
+            conn.onmessage = function (evt) {
+                var msg = JSON.parse(evt.data);
+                var id = msg.robot_id;
+                console.log(id);
+                console.log(msg);
+
+                for (var key in msg) {
+                    if (msg.hasOwnProperty(key)) {
+                        console.log(key + " -> " + msg[key]);
+                        var cell = document.getElementById(key + "_" + id);
+                        console.log(cell)
+                        if(cell) {
+                            cell.innerHTML = msg[key];
+                        }
+                    }
+                }
+            };
+        } else {
+            console.log("Cannot open websocket");
         }
-
-    };
-
-    ws.onclose = function () {
-        console.log("WS is closed");
     };
 </script>
 
@@ -46,26 +58,28 @@
             <th>Дата регистрации</th>
             <th>Дата удаления</th>
         </tr>
+        {{/*            <td><div id="price_{{$value.ID}}">{{$value.StartPrice}}</div></td>*/}}
+
         {{range $ind, $el := . }}
         <tr>
             <div id="{{printf "robot_%d" .RobotID}}">
-                <td id="robot_id">{{$el.RobotID}}</td>
-                <td id="owner_user_id">{{$el.OwnerUserID  }}</td>
-                <td id="parent_robot_id">{{$el.ParentRobotID | printInt}}</td>
-                <td id="is_favourite">{{$el.IsFavourite  }}</td>
-                <td id="is_active">{{$el.IsActive     }}</td>
-                <td id="ticker">{{$el.Ticker | printStr }}</td>
-                <td id="buy_price">{{$el.BuyPrice   | printFloat }}</td>
-                <td id="sell_price">{{$el.SellPrice  | printFloat  }}</td>
-                <td id="plan_start">{{$el.PlanStart  | printTime  }}</td>
-                <td id="plan_end">{{$el.PlanEnd    | printTime  }}</td>
-                <td id="plan_yield">{{$el.PlanYield  | printFloat  }}</td>
-                <td id="fact_yield">{{$el.FactYield  | printFloat  }}</td>
-                <td id="deals_count">{{$el.DealsCount | printInt  }}</td>
-                <td id="activated_at">{{$el.ActivatedAt | printTime  }}</td>
-                <td id="deactivated_at">{{$el.DeactivatedAt | printTime}}</td>
-                <td id="created_at">{{$el.CreatedAt  | printTime  }}</td>
-                <td id="deleted_at">{{$el.DeletedAt  | printTime  }}</td>
+                <td id="{{printf "robot_id_%d" .RobotID}}">{{$el.RobotID}}</td>
+                <td id="{{printf "owner_user_id_%d" .RobotID}}">{{$el.OwnerUserID  }}</td>
+                <td id="{{printf "parent_robot_id_%d" .RobotID}}">{{$el.ParentRobotID | printInt}}</td>
+                <td id="{{printf "is_favourite_%d" .RobotID}}">{{$el.IsFavourite  }}</td>
+                <td id="{{printf "is_active_%d" .RobotID}}">{{$el.IsActive     }}</td>
+                <td id="{{printf "ticker_%d" .RobotID}}">{{$el.Ticker | printStr }}</td>
+                <td id="{{printf "buy_price_%d" .RobotID}}">{{$el.BuyPrice   | printFloat }}</td>
+                <td id="{{printf "sell_price_%d" .RobotID}}">{{$el.SellPrice  | printFloat  }}</td>
+                <td id="{{printf "plan_start_%d" .RobotID}}">{{$el.PlanStart  | printTime  }}</td>
+                <td id="{{printf "plan_end_%d" .RobotID}}">{{$el.PlanEnd    | printTime  }}</td>
+                <td id="{{printf "plan_yield_%d" .RobotID}}">{{$el.PlanYield  | printFloat  }}</td>
+                <td id="{{printf "fact_yield_%d" .RobotID}}">{{$el.FactYield  | printFloat  }}</td>
+                <td id="{{printf "deals_count_%d" .RobotID}}">{{$el.DealsCount | printInt  }}</td>
+                <td id="{{printf "activated_at_%d" .RobotID}}">{{$el.ActivatedAt | printTime  }}</td>
+                <td id="{{printf "deactivated_at_%d" .RobotID}}">{{$el.DeactivatedAt | printTime}}</td>
+                <td id="{{printf "created_at_%d" .RobotID}}">{{$el.CreatedAt  | printTime  }}</td>
+                <td id="{{printf "deleted_at_%d" .RobotID}}">{{$el.DeletedAt  | printTime  }}</td>
             </div>
         </tr>
         {{end}}

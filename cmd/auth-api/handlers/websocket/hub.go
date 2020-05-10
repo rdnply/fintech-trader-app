@@ -1,10 +1,13 @@
 package websocket
 
-import "fmt"
+import (
+	"cw1/internal/robot"
+	"fmt"
+)
 
 type Hub struct {
 	clients    map[*Client]bool
-	broadcast  chan []byte
+	broadcast  chan *robot.Robot
 	register   chan *Client
 	unregister chan *Client
 }
@@ -12,7 +15,7 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan *robot.Robot),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
@@ -30,7 +33,7 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			fmt.Printf("get message: %s\n", string(message))
+			fmt.Printf("get message: %s\n", message.RobotID)
 			for client := range h.clients {
 				select {
 				case client.send <- message:
@@ -43,11 +46,11 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) Broadcast(data []byte) {
+func (h *Hub) Broadcast(rbt *robot.Robot) {
 	done := make(chan bool)
-	fmt.Printf("get to broadcast: %s", string(data))
+	fmt.Printf("get to broadcast: %s", *rbt)
 	go func() {
-		h.broadcast <- data
+		h.broadcast <- rbt
 	}()
 	done <- true
 	close(done)

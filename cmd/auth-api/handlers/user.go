@@ -362,7 +362,7 @@ func renderTemplate(w http.ResponseWriter, name string, template string, tmplts 
 		return httperror.NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
 	}
 
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 
 	return nil
 }
