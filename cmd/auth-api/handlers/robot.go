@@ -57,7 +57,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	if rbtFromDB.DeletedAt.V.Valid {
+	if rbtFromDB.DeletedAt != nil {
 		ctx := fmt.Sprintf("Can't find robot with id: %v in storage", rbtID)
 		s := fmt.Sprintf("robot with id %v don't exist", rbtID)
 

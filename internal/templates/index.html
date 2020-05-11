@@ -58,28 +58,26 @@
             <th>Дата регистрации</th>
             <th>Дата удаления</th>
         </tr>
-        {{/*            <td><div id="price_{{$value.ID}}">{{$value.StartPrice}}</div></td>*/}}
-
         {{range $ind, $el := . }}
         <tr>
-            <div id="{{printf "robot_%d" .RobotID}}">
-                <td id="{{printf "robot_id_%d" .RobotID}}">{{$el.RobotID}}</td>
-                <td id="{{printf "owner_user_id_%d" .RobotID}}">{{$el.OwnerUserID  }}</td>
-                <td id="{{printf "parent_robot_id_%d" .RobotID}}">{{$el.ParentRobotID | printInt}}</td>
-                <td id="{{printf "is_favourite_%d" .RobotID}}">{{$el.IsFavourite  }}</td>
-                <td id="{{printf "is_active_%d" .RobotID}}">{{$el.IsActive     }}</td>
-                <td id="{{printf "ticker_%d" .RobotID}}">{{$el.Ticker | printStr }}</td>
-                <td id="{{printf "buy_price_%d" .RobotID}}">{{$el.BuyPrice   | printFloat }}</td>
-                <td id="{{printf "sell_price_%d" .RobotID}}">{{$el.SellPrice  | printFloat  }}</td>
-                <td id="{{printf "plan_start_%d" .RobotID}}">{{$el.PlanStart  | printTime  }}</td>
-                <td id="{{printf "plan_end_%d" .RobotID}}">{{$el.PlanEnd    | printTime  }}</td>
-                <td id="{{printf "plan_yield_%d" .RobotID}}">{{$el.PlanYield  | printFloat  }}</td>
-                <td id="{{printf "fact_yield_%d" .RobotID}}">{{$el.FactYield  | printFloat  }}</td>
-                <td id="{{printf "deals_count_%d" .RobotID}}">{{$el.DealsCount | printInt  }}</td>
-                <td id="{{printf "activated_at_%d" .RobotID}}">{{$el.ActivatedAt | printTime  }}</td>
-                <td id="{{printf "deactivated_at_%d" .RobotID}}">{{$el.DeactivatedAt | printTime}}</td>
-                <td id="{{printf "created_at_%d" .RobotID}}">{{$el.CreatedAt  | printTime  }}</td>
-                <td id="{{printf "deleted_at_%d" .RobotID}}">{{$el.DeletedAt  | printTime  }}</td>
+            <div id="robot_{{.RobotID}}">
+                <td id="robot_id_{{.RobotID}}">{{$el.RobotID}}</td>
+                <td id="owner_user_id_{{.RobotID}}">{{$el.OwnerUserID  }}</td>
+                <td id="parent_robot_id_{{.RobotID}}">{{$el.ParentRobotID | printInt}}</td>
+                <td id="is_favourite_{{.RobotID}}">{{$el.IsFavourite  }}</td>
+                <td id="is_active_{{.RobotID}}">{{$el.IsActive     }}</td>
+                <td id="ticker_{{.RobotID}}">{{$el.Ticker | printStr }}</td>
+                <td id="buy_price_{{.RobotID}}">{{$el.BuyPrice   | printFloat }}</td>
+                <td id="sell_price_{{.RobotID}}">{{$el.SellPrice  | printFloat  }}</td>
+                <td id="plan_start_{{.RobotID}}">{{$el.PlanStart  | printTime  }}</td>
+                <td id="plan_end_{{.RobotID}}">{{$el.PlanEnd    | printTime  }}</td>
+                <td id="plan_yield_{{.RobotID}}">{{$el.PlanYield  | printFloat  }}</td>
+                <td id="fact_yield_{{.RobotID}}">{{$el.FactYield  | printFloat  }}</td>
+                <td id="deals_count_{{.RobotID}}">{{$el.DealsCount | printInt  }}</td>
+                <td id="activated_at_{{.RobotID}}">{{$el.ActivatedAt | printTime  }}</td>
+                <td id="deactivated_at_{{.RobotID}}">{{$el.DeactivatedAt | printTime}}</td>
+                <td id="created_at_{{.RobotID}}">{{$el.CreatedAt  | printTime  }}</td>
+                <td id="deleted_at_{{.RobotID}}">{{$el.DeletedAt  | printTime  }}</td>
             </div>
         </tr>
         {{end}}

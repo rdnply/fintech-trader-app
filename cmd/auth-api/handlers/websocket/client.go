@@ -66,4 +66,3 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
-
