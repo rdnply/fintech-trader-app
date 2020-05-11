@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -340,6 +341,10 @@ func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*
 	case "application/json":
 		return respondJSON(w, rbts)
 	case "text/html":
+		sort.SliceStable(rbts, func(i, j int) bool {
+			return rbts[i].RobotID < rbts[j].RobotID
+		})
+
 		return renderTemplate(w, "index", "base", tmplts, rbts)
 	default:
 		return httperror.NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)

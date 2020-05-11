@@ -1,6 +1,47 @@
 {{define "head"}}<title>Роботы</title>{{end}}
 {{define "body"}}
 <script type="text/javascript">
+    var fields = ["robot_id", "owner_user_id", "parent_robot_id", "is_favourite", "is_active", "ticker",
+        "buy_price", "sell_price", "plan_start", "plan_end", "plan_yield", "fact_yield", "deals_count",
+        "activated_at", "deactivated_at", "created_at", "deleted_at"];
+
+
+    function addCells(id, row) {
+        for(var i = 0; i < fields.length; i++) {
+            var col = document.createElement('td');
+            col.id = fields[i] + "_" + id;
+            row.appendChild(col);
+            col.innerHTML = "";
+        }
+    }
+
+    function createRow(id) {
+        var row = document.createElement('tr');
+        row.id = "robot_" + id;
+        addCells(id, row);
+        var table = document.getElementById("robotsTable");
+        table.appendChild(row);
+    }
+
+
+    function addFavourite(newID, msg) {
+        if(msg.hasOwnProperty("parent_robot_id") && document.getElementById("robot_id_" + msg["parent_robot_id"])) {
+            createRow(newID);
+            for (var key in msg) {
+                if (msg.hasOwnProperty(key)) {
+                    console.log(key + " -> " + msg[key]);
+                    var cell = document.getElementById(key + "_" +  msg["parent_robot_id"]);
+                    console.log(cell)
+                    if(cell) {
+                        var c = document.getElementById(key + "_" + newID);
+                        c.innerHTML = msg[key];
+                    }
+                }
+            }
+
+        }
+    }
+
     window.onload = function () {
         if (window["WebSocket"]) {
             conn = new WebSocket("ws://localhost:5000/ws");
@@ -30,6 +71,8 @@
                         }
                     }
                 }
+
+                addFavourite(id, msg)
             };
         } else {
             console.log("Cannot open websocket");
@@ -38,7 +81,7 @@
 </script>
 
 <div>
-    <table border="1">
+    <table id="robotsTable" border="1">
         <tr>
             <th>Идентификатор робота</th>
             <th>Владелец робота</th>

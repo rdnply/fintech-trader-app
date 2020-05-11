@@ -1,10 +1,2 @@
-{"level":"info","ts":"2020-05-11T13:01:10+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
-{"level":"error","ts":"2020-05-11T13:01:24+03:00","caller":"http/server.go:2007","msg":"Tokens don't match"}
-{"level":"error","ts":"2020-05-11T13:03:36+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 9"}
-{"level":"error","ts":"2020-05-11T13:04:36+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 5"}
-{"level":"error","ts":"2020-05-11T13:04:40+03:00","caller":"http/server.go:2007","msg":"Can deactivate robot with id: 5"}
-{"level":"error","ts":"2020-05-11T13:05:45+03:00","caller":"http/server.go:2007","msg":"Can activate robot with id: 9"}
-{"level":"error","ts":"2020-05-11T13:08:23+03:00","caller":"http/server.go:2007","msg":"Can't unmarshal input json for update robot: invalid character 'r' looking for beginning of object key string"}
-{"level":"error","ts":"2020-05-11T13:09:05+03:00","caller":"http/server.go:2007","msg":"Can't unmarshal input json for update robot: invalid character 'o' looking for beginning of object key string"}
-{"level":"error","ts":"2020-05-11T13:09:43+03:00","caller":"http/server.go:2007","msg":"Can't update  robot with id: 9 in storage: can't exec query: pq: нулевое значение в столбце \"created_at\" нарушает ограничение NOT NULL"}
-{"level":"info","ts":"2020-05-11T13:10:47+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-11T14:51:34+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
+{"level":"info","ts":"2020-05-11T14:54:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}

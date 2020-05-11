@@ -81,6 +81,8 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) error {
 
 	w.WriteHeader(http.StatusOK)
 
+	h.hub.Broadcast(rbtFromDB)
+
 	return nil
 }
 
@@ -175,6 +177,7 @@ func copyForFavourite(old *robot.Robot, ownerID int64) *robot.Robot {
 	old.ParentRobotID = format.NewNullInt64(old.RobotID)
 	old.IsFavourite = true
 	old.IsActive = false
+	old.ActivatedAt = nil
 
 	return old
 }

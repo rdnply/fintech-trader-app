@@ -18,7 +18,7 @@ func PrintNullFloat64(n *NullFloat64) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%2f", n.V.Float64)
+	return fmt.Sprintf("%.2f", n.V.Float64)
 }
 
 func PrintNullString(n *NullString) string {
