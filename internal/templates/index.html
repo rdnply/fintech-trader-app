@@ -65,7 +65,6 @@
                     if (msg.hasOwnProperty(key)) {
                         console.log(key + " -> " + msg[key]);
                         var cell = document.getElementById(key + "_" + id);
-                        console.log(cell)
                         if(cell) {
                             cell.innerHTML = msg[key];
                         }

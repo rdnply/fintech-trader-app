@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"cw1/cmd/auth-api/httperror"
@@ -274,10 +274,14 @@ func canBeChangeActivation(rbt *robot.Robot, userID int64) bool {
 func intoPlanRange(start *format.NullTime, end *format.NullTime) bool {
 	t := time.Now()
 
+	fmt.Println(start.V.Time)
+	fmt.Println(end.V.Time)
+	fmt.Println(t.Before(start.V.Time))
+	fmt.Println(t.After(end.V.Time))
 	switch {
 	case start == nil || end == nil:
 		return false
-	case t.Before(start.V.Time) && t.After(end.V.Time):
+	case t.Before(start.V.Time) || t.After(end.V.Time):
 		return false
 	default:
 		return true

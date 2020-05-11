@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"cw1/cmd/auth-api/handlers/websocket"
@@ -6,11 +6,10 @@ import (
 	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
-	"html/template"
-	"net/http"
-
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
+	"html/template"
+	"net/http"
 )
 
 type Handler struct {
@@ -22,7 +21,7 @@ type Handler struct {
 	tmplts         map[string]*template.Template
 }
 
-func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage,
+func New(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage,
 	rt *postgres.RobotStorage, hb *websocket.Hub) (*Handler, error) {
 	t, err := parseTemplates()
 	if err != nil {
@@ -135,3 +134,4 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+

@@ -19,6 +19,7 @@ type RobotStorage struct {
 	findByOwnerIDAndTickerStmt *sql.Stmt
 	findAllRobotsStmt          *sql.Stmt
 	updateStmt                 *sql.Stmt
+	getActiveRobotsStmt        *sql.Stmt
 }
 
 func NewRobotStorage(db *DB) (*RobotStorage, error) {
@@ -32,6 +33,7 @@ func NewRobotStorage(db *DB) (*RobotStorage, error) {
 		{Query: findRobotByOwnerIDAndTickerQuery, Dst: &s.findByOwnerIDAndTickerStmt},
 		{Query: findAllRobotsQuery, Dst: &s.findAllRobotsStmt},
 		{Query: updateRobotQuery, Dst: &s.updateStmt},
+		{Query: getActiveRobotsQuery, Dst: &s.getActiveRobotsStmt},
 	}
 
 	if err := s.initStatements(stmts); err != nil {
@@ -127,6 +129,13 @@ func (s *RobotStorage) Update(r *robot.Robot) error {
 	}
 
 	return nil
+}
+
+const getActiveRobotsQuery = "SELECT robot_id, " + robotFields + " FROM robots " +
+	"WHERE is_active=true AND ((plan_start::time <= localtime AND localtime <= plan_end::time))"
+
+func (s *RobotStorage) GetActiveRobots() ([]*robot.Robot, error) {
+	return find(s.getActiveRobotsStmt)
 }
 
 func find(stmt *sql.Stmt, args ...interface{}) ([]*robot.Robot, error) {

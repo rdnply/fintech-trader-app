@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"cw1/cmd/auth-api/handlers"
+	"cw1/cmd/auth-api/handlers/trader"
 	"cw1/cmd/auth-api/handlers/websocket"
 	"cw1/internal/postgres"
+	"cw1/internal/streamer"
 	"cw1/pkg/log/logger"
 	"io"
 	"log"
@@ -17,6 +19,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -58,7 +61,7 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
-	h, err := handlers.NewHandler(logger, userStorage, sessionStorage, robotStorage, hub)
+	h, err := handler.New(logger, userStorage, sessionStorage, robotStorage, hub)
 	if err != nil {
 		logger.Fatalf("Can't create new handler: %s", err)
 	}
@@ -70,11 +73,25 @@ func main() {
 	const Duration = 5
 	go gracefulShutdown(srv, Duration*time.Second, logger)
 
+	cc, err := grpc.Dial("localhost:8000", grpc.WithInsecure())
+	if err != nil {
+		logger.Fatalf("Can't create connection to price streamer: ", err)
+	}
+
+	defer handleCloser(logger, "price_streamer_connection", cc)
+
+
+	tradingClient := streamer.NewTradingServiceClient(cc)
+
 	logger.Infof("Server is running at %v", addr)
+	tr := trader.New(logger, tradingClient, robotStorage, hub)
+	quit := make(chan bool)
+	go tr.StartDeals(quit)
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+	quit <- true
 }
 
 func handleCloser(l logger.Logger, resource string, closer io.Closer) {
@@ -83,7 +100,7 @@ func handleCloser(l logger.Logger, resource string, closer io.Closer) {
 	}
 }
 
-func routes(h *handlers.Handler) *chi.Mux {
+func routes(h *handler.Handler) *chi.Mux {
 	r := chi.NewRouter()
 
 	const Duration = 60
