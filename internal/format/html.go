@@ -39,11 +39,10 @@ func PrintNullTime(n *NullTime) string {
 	return n.V.Time.Format(layout)
 }
 
-func JoinNullInt(s string , n *NullInt64) string {
+func JoinNullInt(s string, n *NullInt64) string {
 	if n == nil || !n.V.Valid {
 		return ""
 	}
 
-	return s +  strconv.FormatInt(n.V.Int64, 64)
+	return s + strconv.FormatInt(n.V.Int64, 64)
 }
-

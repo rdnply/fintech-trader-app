@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"sort"
 	"strconv"
@@ -326,7 +327,7 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	err = respondWithData(w, r,  h.tmplts, robots...)
+	err = respondWithData(w, r, h.tmplts, robots...)
 	if err != nil {
 		return err
 	}
@@ -351,7 +352,7 @@ func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*
 	}
 }
 
-func renderTemplate(w http.ResponseWriter, name string, template string, tmplts map[string]*template.Template, payload interface{}) error {
+func renderTemplate(w io.Writer, name string, template string, tmplts map[string]*template.Template, payload interface{}) error {
 	tmpl, ok := tmplts[name]
 	if !ok {
 		ctx := fmt.Sprintf("Can't find template with name: %v", name)
@@ -382,5 +383,5 @@ func respondJSON(w http.ResponseWriter, payload interface{}) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	return  nil
+	return nil
 }

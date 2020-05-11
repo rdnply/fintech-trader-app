@@ -156,9 +156,10 @@ func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	rbt := copyForFavourite(rbtFromDB, userID)
+
 	err = h.robotStorage.Create(rbt)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't create copy for favourite robot with id: %v", rbtID)
+		ctx := fmt.Sprintf("Can't create copy for favourite robot with id: %v", rbtID) //nolint: misspell
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
@@ -196,11 +197,13 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 	if !canBeChangeActivation(rbtFromDB, userID) || rbtFromDB.IsActive {
 		ctx := fmt.Sprintf("Can activate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't activate robot with id: %v", rbtID)
+
 		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	rbtFromDB.IsActive = true
 	rbtFromDB.ActivatedAt = format.NewNullTime()
+
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
@@ -227,6 +230,7 @@ func findRobot(robotStorage robot.Storage, rbtID int64) (*robot.Robot, error) {
 	if rbtFromDB.RobotID == BottomLineValidID {
 		ctx := fmt.Sprintf("Robot with id: %v doesn't exist", rbtID)
 		s := fmt.Sprintf("can't find robot with id: %v", rbtID)
+
 		return nil, httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
@@ -269,6 +273,7 @@ func canBeChangeActivation(rbt *robot.Robot, userID int64) bool {
 
 func intoPlanRange(start *format.NullTime, end *format.NullTime) bool {
 	t := time.Now()
+
 	switch {
 	case start == nil || end == nil:
 		return false
@@ -293,11 +298,13 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 	if !canBeChangeActivation(rbtFromDB, userID) || !rbtFromDB.IsActive {
 		ctx := fmt.Sprintf("Can deactivate robot with id: %v", rbtID)
 		s := fmt.Sprintf("can't deactivate robot with id: %v", rbtID)
+
 		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
 	rbtFromDB.IsActive = false
 	rbtFromDB.DeactivatedAt = format.NewNullTime()
+
 	err = h.robotStorage.Update(rbtFromDB)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't create copy for active robot with id: %v", rbtID)
@@ -328,6 +335,7 @@ func (h *Handler) getRobot(w http.ResponseWriter, r *http.Request) error {
 	if rbtFromDB.OwnerUserID != userID {
 		ctx := fmt.Sprintf("Can get robot with id: %v for user with id: %v", rbtID, userID)
 		s := fmt.Sprintf("user with id: %v don't have permission to get robot with id: %v", userID, rbtID)
+
 		return httperror.NewHTTPError(ctx, err, s, http.StatusBadRequest)
 	}
 
@@ -359,11 +367,13 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 
 	if rbtFromID.OwnerUserID != userID {
 		ctx := fmt.Sprintf("User with id: %v can't update robot with id: %v", userID, rbtID)
-		s := fmt.Sprintf("user with id: %v don't have permission to update robot with id: %v", rbtID)
+		s := fmt.Sprintf("user with id: %v don't have permission to update robot with id: %v", userID, rbtID)
+
 		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
 	}
 
 	rbt.RobotID = rbtID
+
 	err = h.robotStorage.Update(&rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't update  robot with id: %v in storage", rbtID)
@@ -379,4 +389,3 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
-

@@ -22,7 +22,8 @@ type Handler struct {
 	tmplts         map[string]*template.Template
 }
 
-func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage, rt *postgres.RobotStorage, hb *websocket.Hub) (*Handler, error) {
+func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage,
+	rt *postgres.RobotStorage, hb *websocket.Hub) (*Handler, error) {
 	t, err := parseTemplates()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't parse templates for handler")
@@ -40,11 +41,11 @@ func NewHandler(logger logger.Logger, ut *postgres.UserStorage, st *postgres.Ses
 
 func parseTemplates() (map[string]*template.Template, error) {
 	funcMap := template.FuncMap{
-		"printInt":      format.PrintNullInt64,
-		"printFloat":    format.PrintNullFloat64,
-		"printStr":      format.PrintNullString,
-		"printTime":     format.PrintNullTime,
-		"joinNullInt":   format.JoinNullInt,
+		"printInt":    format.PrintNullInt64,
+		"printFloat":  format.PrintNullFloat64,
+		"printStr":    format.PrintNullString,
+		"printTime":   format.PrintNullTime,
+		"joinNullInt": format.JoinNullInt,
 	}
 
 	tmplts := make(map[string]*template.Template)
@@ -73,7 +74,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Post("/robot", rootHandler{h.createRobot, h.logger}.ServeHTTP)
 		r.Delete("/robot/{id}", rootHandler{h.deleteRobot, h.logger}.ServeHTTP)
 		r.Get("/robots", rootHandler{h.getRobots, h.logger}.ServeHTTP)
-		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP)
+		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP) //nolint: misspell
 		r.Put("/robot/{id}/activate", rootHandler{h.activate, h.logger}.ServeHTTP)
 		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
 		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
