@@ -100,7 +100,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
 	}
 
-	_, err = respondJSON(w, map[string]string{"bearer": token})
+	err = respondJSON(w, map[string]string{"bearer": token})
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
 			return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		_, err = respondJSON(w, u)
+		err = respondJSON(w, u)
 		if err != nil {
 			return nil
 		}
@@ -278,9 +278,7 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 			return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 		}
 
-		//info := user.NewInfo(u)
-
-		_, err = respondJSON(w, u)
+		err = respondJSON(w, u)
 		if err != nil {
 			return nil
 		}
@@ -340,8 +338,7 @@ func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*
 
 	switch t {
 	case "application/json":
-		_, err := respondJSON(w, rbts)
-		return err
+		return respondJSON(w, rbts)
 	case "text/html":
 		return renderTemplate(w, "index", "base", tmplts, rbts)
 	default:
@@ -362,15 +359,13 @@ func renderTemplate(w http.ResponseWriter, name string, template string, tmplts 
 		return httperror.NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
 	}
 
-	//w.WriteHeader(http.StatusOK)
-
 	return nil
 }
 
-func respondJSON(w http.ResponseWriter, payload interface{}) ([]byte, error) {
+func respondJSON(w http.ResponseWriter, payload interface{}) error {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		return nil, httperror.NewHTTPError("Can't marshal respond to json", err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError("Can't marshal respond to json", err, "", http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -379,8 +374,8 @@ func respondJSON(w http.ResponseWriter, payload interface{}) ([]byte, error) {
 	c, err := w.Write(response)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't write json data in respond, code: %v", c)
-		return nil, httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	return response, nil
+	return  nil
 }

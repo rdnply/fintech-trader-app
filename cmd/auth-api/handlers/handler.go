@@ -115,8 +115,7 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//status, headers := clientError.ResponseHeaders()
-	_, headers := clientError.ResponseHeaders()
+	status, headers := clientError.ResponseHeaders()
 	for k, v := range headers {
 		if body == nil && v == "application/json" {
 			continue
@@ -125,7 +124,7 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(k, v)
 	}
 
-	//w.WriteHeader(status)
+	w.WriteHeader(status)
 
 	c, err := w.Write(body)
 	if err != nil {

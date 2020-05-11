@@ -160,7 +160,7 @@ func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	_, err = respondJSON(w, rbt)
+	err = respondJSON(w, rbt)
 	if err != nil {
 		return nil
 	}
@@ -204,7 +204,7 @@ func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	_, err = respondJSON(w, rbtFromDB)
+	err = respondJSON(w, rbtFromDB)
 	if err != nil {
 		return nil
 	}
@@ -301,7 +301,7 @@ func (h *Handler) deactivate(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	_, err = respondJSON(w, rbtFromDB)
+	err = respondJSON(w, rbtFromDB)
 	if err != nil {
 		return nil
 	}
@@ -367,7 +367,7 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	_, err = respondJSON(w, rbt)
+	err = respondJSON(w, rbt)
 	if err != nil {
 		return err
 	}

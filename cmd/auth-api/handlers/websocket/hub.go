@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"cw1/internal/robot"
-	"fmt"
 )
 
 type Hub struct {
@@ -22,7 +21,6 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
-	fmt.Printf("start hub rub\n")
 	for {
 		select {
 		case client := <-h.register:
@@ -33,7 +31,6 @@ func (h *Hub) Run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			fmt.Printf("get message: %s\n", message.RobotID)
 			for client := range h.clients {
 				select {
 				case client.send <- message:
@@ -48,10 +45,10 @@ func (h *Hub) Run() {
 
 func (h *Hub) Broadcast(rbt *robot.Robot) {
 	done := make(chan bool)
-	fmt.Printf("get to broadcast: %s", *rbt)
 	go func() {
 		h.broadcast <- rbt
+		done <- true
 	}()
-	done <- true
+	<-done
 	close(done)
 }

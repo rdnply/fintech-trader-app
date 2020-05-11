@@ -40,14 +40,11 @@ func (c *Client) writePump() {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			fmt.Printf("get message and try write json: %v\n", message.RobotID)
 			err := c.conn.WriteJSON(message)
 			if err != nil {
-				fmt.Printf("can't write json: %v\n", err)
 				return
 			}
 		case <-ticker.C:
-			fmt.Println("ping")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -57,7 +54,6 @@ func (c *Client) writePump() {
 }
 
 func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
-	fmt.Println("start websocket")
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't open websocket connection\n")
@@ -71,16 +67,3 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-//func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
-//	conn, err := upgrader.Upgrade(w, r, nil)
-//	if err != nil {
-//		ctx := fmt.Sprintf("Can't open websocket connection\n")
-//		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
-//	}
-//	client := &Client{hub: hub, conn: conn, send: make(chan []byte)}
-//	client.hub.register <- client
-//
-//	go client.writePump()
-//
-//	return nil
-//}
