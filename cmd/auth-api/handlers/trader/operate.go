@@ -5,16 +5,17 @@ import (
 	"cw1/cmd/auth-api/handlers/websocket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
-	"cw1/internal/streamer"
+	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 )
 
 type Trader struct {
 	logger         logger.Logger
-	tradingService streamer.TradingServiceClient
+	tradingService pb.TradingServiceClient
 	robotStorage   *postgres.RobotStorage
 	hub            *websocket.Hub
 }
@@ -25,7 +26,7 @@ type info struct {
 	robotsByTicker map[string][]int64
 }
 
-func New(l logger.Logger, tc streamer.TradingServiceClient, rs *postgres.RobotStorage, h *websocket.Hub) *Trader {
+func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage, h *websocket.Hub) *Trader {
 	return &Trader{
 		logger:         l,
 		tradingService: tc,
@@ -35,7 +36,7 @@ func New(l logger.Logger, tc streamer.TradingServiceClient, rs *postgres.RobotSt
 }
 
 func (t *Trader) StartDeals(quit chan bool) {
-	ticker := time.NewTicker(time.Second * 55)
+	ticker := time.NewTicker(time.Second * 5)
 	t.logger.Infof("Start trader")
 	go func() {
 		for {
@@ -46,11 +47,15 @@ func (t *Trader) StartDeals(quit chan bool) {
 					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}
 
+				fmt.Println(rbts)
 				rbtsByTicker := getRobotsByTicker(rbts)
+				var wg sync.WaitGroup
 				for k, v := range rbtsByTicker {
-					go makeDeals(k, v, t.tradingService, t.logger)
+					//wg.Add(1)
+					makeDeals(&wg, k, v, t.tradingService, t.logger)
 				}
-
+				//wg.Wait()
+				fmt.Println(rbtsByTicker)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -77,21 +82,24 @@ func getRobotsByTicker(rr []*robot.Robot) map[string][]int64 {
 }
 
 
-func makeDeals(ticker string, rr []int64, service streamer.TradingServiceClient, l logger.Logger) {
-	priceRequest := streamer.PriceRequest{Ticker: ticker}
+func makeDeals(wg *sync.WaitGroup,ticker string, rr []int64, service pb.TradingServiceClient, l logger.Logger) {
+	priceRequest := pb.PriceRequest{Ticker: ticker}
 	resp, err := service.Price(context.Background(), &priceRequest)
 	if err != nil {
 		l.Errorf("can't get prices from stream: %v", err)
+		return
 	}
-
+	fmt.Println("get prices")
 	for {
 		lot, err := resp.Recv()
 		if err == io.EOF {
+			wg.Done()
 			break
 		}
 		if err != nil {
 			l.Errorf("can't get price from request: %v" , err)
 		}
+
 		fmt.Printf("Ticker: %v; %v, %v, %v", ticker, lot.SellPrice, lot.BuyPrice, lot.Ts)
 	}
 

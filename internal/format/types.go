@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"time"
 )
@@ -163,9 +162,9 @@ func (nt *NullTime) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: false}}
+		*nt = NullTime{V: sql.NullTime{Time: t.Time.UTC(), Valid: false}}
 	} else {
-		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: true}}
+		*nt = NullTime{V: sql.NullTime{Time: t.Time.UTC(), Valid: true}}
 	}
 
 	return nil
@@ -185,10 +184,15 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 	}
 
 	t := nt.V.Time
-	b := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
-		t.Hour(), t.Minute(), t.Second())
+	s := t.Format(time.RFC3339)
+	//t, err := time.Parse("2006-01-02T15:04:05Z", s)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//s = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
+	//	t.Hour(), t.Minute(), t.Second())
 
-	return []byte(`"` + b + `"`), nil
+	return []byte(`"` + s + `"`), nil
 }
 
 func (nt *NullTime) UnmarshalJSON(b []byte) error {

@@ -264,7 +264,7 @@ func getRobotAndUserID(sessionStorage session.Storage, r *http.Request) (int64, 
 }
 
 func canBeChangeActivation(rbt *robot.Robot, userID int64) bool {
-	if rbt.OwnerUserID != userID || intoPlanRange(rbt.PlanStart, rbt.PlanEnd) {
+	if rbt.OwnerUserID != userID || !intoPlanRange(rbt.PlanStart, rbt.PlanEnd) {
 		return false
 	}
 
@@ -274,10 +274,6 @@ func canBeChangeActivation(rbt *robot.Robot, userID int64) bool {
 func intoPlanRange(start *format.NullTime, end *format.NullTime) bool {
 	t := time.Now()
 
-	fmt.Println(start.V.Time)
-	fmt.Println(end.V.Time)
-	fmt.Println(t.Before(start.V.Time))
-	fmt.Println(t.After(end.V.Time))
 	switch {
 	case start == nil || end == nil:
 		return false

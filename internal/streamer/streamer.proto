@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package streamer;
+package fintech;
 
-option go_package = "internal/streamer";
+option go_package = "internal/streamer;fintech";
 
 import "google/protobuf/timestamp.proto";
 

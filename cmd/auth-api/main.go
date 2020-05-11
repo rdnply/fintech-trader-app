@@ -6,7 +6,7 @@ import (
 	"cw1/cmd/auth-api/handlers/trader"
 	"cw1/cmd/auth-api/handlers/websocket"
 	"cw1/internal/postgres"
-	"cw1/internal/streamer"
+	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
 	"io"
 	"log"
@@ -73,15 +73,14 @@ func main() {
 	const Duration = 5
 	go gracefulShutdown(srv, Duration*time.Second, logger)
 
-	cc, err := grpc.Dial("localhost:8000", grpc.WithInsecure())
+	conn, err := grpc.Dial(":8000", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatalf("Can't create connection to price streamer: ", err)
 	}
 
-	defer handleCloser(logger, "price_streamer_connection", cc)
+	defer handleCloser(logger, "price_streamer_connection", conn)
 
-
-	tradingClient := streamer.NewTradingServiceClient(cc)
+	tradingClient := pb.NewTradingServiceClient(conn)
 
 	logger.Infof("Server is running at %v", addr)
 	tr := trader.New(logger, tradingClient, robotStorage, hub)
