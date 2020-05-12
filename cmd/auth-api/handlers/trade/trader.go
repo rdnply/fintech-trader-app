@@ -6,7 +6,6 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 	"time"
 )
 
@@ -36,8 +35,12 @@ func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage,
 }
 
 func (t *Trader) StartDeals(quit chan bool) {
-	ticker := time.NewTicker(time.Second * 15)
-	t.logger.Infof("Start trade")
+	const Timeout = 3
+
+	ticker := time.NewTicker(time.Second * Timeout)
+
+	t.logger.Infof("Start making deals")
+
 	go t.hub.Run()
 
 	go func() {
@@ -49,47 +52,58 @@ func (t *Trader) StartDeals(quit chan bool) {
 					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}
 
-				fmt.Println(rbts)
 				rbtsByTicker := getRobotsByTicker(rbts)
 
-				toDelete := make(map[string]bool)
-
-				for k := range t.tickers {
-					toDelete[k] = true
-				}
-
-				for k, v := range rbtsByTicker {
-					if !t.tickers[k] {
-						ticker := initTicker(k, v, t.robotStorage, t.ws)
-						t.hub.register <- ticker
-					}
-					toDelete[k] = false
-				}
-
-				for k, del := range toDelete {
-					if del {
-						ticker := initTicker(k, nil, t.robotStorage, t.ws)
-						t.hub.unregister <- ticker
-					}
-				}
-
-				for k, del := range toDelete {
-					if !del {
-						trade := &trade{k, rbtsByTicker[k]}
-						t.hub.broadcast <- trade
-					}
-				}
+				t.work(rbtsByTicker)
 			case <-quit:
-				fmt.Println("quit from trader")
+				t.logger.Infof("Quit from trader")
 				ticker.Stop()
+
 				return
 			}
 		}
 	}()
-
 }
 
-func initTicker(n string, rr []*robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub) *Ticker {
+func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
+	toDelete := make(map[string]bool)
+
+	done := make(chan bool)
+
+	go func() {
+		for k := range t.tickers {
+			toDelete[k] = true
+		}
+
+		for k, v := range rbtsByTicker {
+			if !t.tickers[k] {
+				ticker := initTicker(k, v, t.robotStorage, t.ws, t.logger)
+				t.hub.register <- ticker
+			}
+
+			toDelete[k] = false
+		}
+
+		for k, del := range toDelete {
+			if del {
+				ticker := initTicker(k, nil, t.robotStorage, t.ws, t.logger)
+				t.hub.unregister <- ticker
+			}
+		}
+
+		for k, del := range toDelete {
+			if !del {
+				trade := &trade{k, rbtsByTicker[k]}
+				t.hub.broadcast <- trade
+			}
+		}
+		done <- true
+	}()
+
+	<-done
+}
+
+func initTicker(n string, rr []*robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub, l logger.Logger) *Ticker {
 	t := &Ticker{
 		name:         n,
 		robots:       rr,
@@ -100,7 +114,8 @@ func initTicker(n string, rr []*robot.Robot, rs *postgres.RobotStorage, ws *sock
 		broadcast:    make(chan []*robot.Robot),
 		id:           make(map[int64]*Client),
 		robotStorage: rs,
-		ws: ws,
+		ws:           ws,
+		logger:       l,
 	}
 
 	return t

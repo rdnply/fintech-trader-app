@@ -1,5 +1,45 @@
-{"level":"info","ts":"2020-05-12T17:14:25+03:00","caller":"runtime/proc.go:203","msg":"Server is running at :5000"}
-{"level":"info","ts":"2020-05-12T17:14:25+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start trade"}
-{"level":"info","ts":"2020-05-12T17:15:09+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
-{"level":"error","ts":"2020-05-12T17:15:09+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
-{"level":"error","ts":"2020-05-12T17:15:09+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"info","ts":"2020-05-12T18:36:39+03:00","caller":"runtime/proc.go:203","msg":"Server is running at 5000"}
+{"level":"info","ts":"2020-05-12T18:36:39+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals"}
+{"level":"info","ts":"2020-05-12T18:36:39+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start running hub for tickers"}
+{"level":"info","ts":"2020-05-12T18:36:42+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:42+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:42+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 37"}
+{"level":"info","ts":"2020-05-12T18:36:42+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=37)"}
+{"level":"info","ts":"2020-05-12T18:36:45+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:45+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 36"}
+{"level":"info","ts":"2020-05-12T18:36:45+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:45+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=36)"}
+{"level":"info","ts":"2020-05-12T18:36:46+03:00","caller":"trade/client.go:30","msg":"Buy lot: buy_price:15  sell_price:14  ts:{seconds:1589297806  nanos:949423600}"}
+{"level":"info","ts":"2020-05-12T18:36:48+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:48+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:48+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 37"}
+{"level":"info","ts":"2020-05-12T18:36:48+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=37)"}
+{"level":"info","ts":"2020-05-12T18:36:51+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:51+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:51+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 36"}
+{"level":"info","ts":"2020-05-12T18:36:51+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=36)"}
+{"level":"info","ts":"2020-05-12T18:36:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:54+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 37"}
+{"level":"info","ts":"2020-05-12T18:36:54+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=37)"}
+{"level":"info","ts":"2020-05-12T18:36:56+03:00","caller":"trade/client.go:30","msg":"Buy lot: buy_price:15  sell_price:12  ts:{seconds:1589297816  nanos:946867600}"}
+{"level":"info","ts":"2020-05-12T18:36:57+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:57+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 36"}
+{"level":"info","ts":"2020-05-12T18:36:57+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:36:57+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=36)"}
+{"level":"info","ts":"2020-05-12T18:36:59+03:00","caller":"trade/client.go:30","msg":"Buy lot: buy_price:14  sell_price:11  ts:{seconds:1589297819  nanos:964667100}"}
+{"level":"info","ts":"2020-05-12T18:37:00+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:37:00+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:37:00+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 37"}
+{"level":"info","ts":"2020-05-12T18:37:00+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=37)"}
+{"level":"info","ts":"2020-05-12T18:37:03+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:37:03+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start making deals for ticker with name: APPL"}
+{"level":"info","ts":"2020-05-12T18:37:03+03:00","caller":"trade/ticker.go:38","msg":"Start client with id: 36"}
+{"level":"info","ts":"2020-05-12T18:37:03+03:00","caller":"trade/client.go:30","msg":"Make update for robot with id:%!(EXTRA int64=36)"}
+{"level":"info","ts":"2020-05-12T18:37:03+03:00","caller":"trade/client.go:30","msg":"Buy lot: buy_price:14  sell_price:11  ts:{seconds:1589297823  nanos:948483400}"}
+{"level":"info","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Quit from trader"}
+{"level":"error","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Unavailable desc = transport is closing"}
+{"level":"error","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Unavailable desc = transport is closing"}
+{"level":"error","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Unavailable desc = transport is closing"}
+{"level":"error","ts":"2020-05-12T18:37:05+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Unavailable desc = transport is closing"}

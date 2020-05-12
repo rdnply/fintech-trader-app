@@ -6,10 +6,11 @@ import (
 	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
 	"html/template"
 	"net/http"
+
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
 type Handler struct {
@@ -134,4 +135,3 @@ func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-

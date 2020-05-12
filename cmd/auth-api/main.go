@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"cw1/cmd/auth-api/handlers"
-	"cw1/cmd/auth-api/handlers/trade"
+	handler "cw1/cmd/auth-api/handlers"
 	"cw1/cmd/auth-api/handlers/socket"
+	"cw1/cmd/auth-api/handlers/trade"
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -25,51 +25,19 @@ import (
 func main() {
 	logger := initLogger()
 
-	db, err := postgres.New(logger, "C:\\Users\\rodion\\go\\src\\cw1\\configuration.json")
-	if err != nil {
-		logger.Fatalf("Can't create database instance %v", err)
-	}
+	st, closers := initStorages(logger)
 
-	defer handleCloser(logger, "db", db)
-
-	err = db.CheckConnection()
-	if err != nil {
-		logger.Fatalf("Can't connect to database %v", err)
-	}
-
-	userStorage, err := postgres.NewUserStorage(db)
-	if err != nil {
-		logger.Fatalf("Can't create user storage: %s", err)
-	}
-
-	defer handleCloser(logger, "user_storage", userStorage)
-
-	sessionStorage, err := postgres.NewSessionStorage(db)
-	if err != nil {
-		logger.Fatalf("Can't create session storage: %s", err)
-	}
-
-	defer handleCloser(logger, "session_storage", sessionStorage)
-
-	robotStorage, err := postgres.NewRobotStorage(db)
-	if err != nil {
-		logger.Fatalf("Can't create robot storage: %s", err)
-	}
-
-	defer handleCloser(logger, "robot_storage", sessionStorage)
+	defer handleClosers(logger, closers)
 
 	hub := socket.NewHub()
 	go hub.Run()
 
-	h, err := handler.New(logger, userStorage, sessionStorage, robotStorage, hub)
+	h, err := handler.New(logger, st.u, st.s, st.r, hub)
 	if err != nil {
 		logger.Fatalf("Can't create new handler: %s", err)
 	}
 
-	r := routes(h)
-	addr := net.JoinHostPort("", "5000")
-	srv := &http.Server{Addr: addr, Handler: r}
-
+	srv := initServer(h, "", "5000")
 
 	const Duration = 5
 	go gracefulShutdown(srv, Duration*time.Second, logger)
@@ -83,9 +51,8 @@ func main() {
 
 	tradingClient := pb.NewTradingServiceClient(conn)
 
-	logger.Infof("Server is running at %v", addr)
-	tr := trade.New(logger, tradingClient, robotStorage, hub)
-
+	logger.Infof("Server is running at %s", "5000")
+	tr := trade.New(logger, tradingClient, st.r, hub)
 
 	quit := make(chan bool)
 	go tr.StartDeals(quit)
@@ -101,6 +68,67 @@ func handleCloser(l logger.Logger, resource string, closer io.Closer) {
 	if err := closer.Close(); err != nil {
 		l.Errorf("Can't close %q: %s", resource, err)
 	}
+}
+
+func handleClosers(l logger.Logger, m map[string]io.Closer) {
+	for n, c := range m {
+		if err := c.Close(); err != nil {
+			l.Errorf("Can't close %q: %s", n, err)
+		}
+	}
+}
+
+type storages struct {
+	u *postgres.UserStorage
+	s *postgres.SessionStorage
+	r *postgres.RobotStorage
+}
+
+func initStorages(logger logger.Logger) (*storages, map[string]io.Closer) {
+	closers := make(map[string]io.Closer)
+
+	db, err := postgres.New(logger, "C:\\Users\\rodion\\go\\src\\cw1\\configuration.json")
+	if err != nil {
+		logger.Fatalf("Can't create database instance %v", err)
+	}
+
+	closers["db"] = db
+
+	err = db.CheckConnection()
+	if err != nil {
+		logger.Fatalf("Can't connect to database %v", err)
+	}
+
+	userStorage, err := postgres.NewUserStorage(db)
+	if err != nil {
+		logger.Fatalf("Can't create user storage: %s", err)
+	}
+
+	closers["user_storage"] = userStorage
+
+	sessionStorage, err := postgres.NewSessionStorage(db)
+	if err != nil {
+		logger.Fatalf("Can't create session storage: %s", err)
+	}
+
+	closers["session_storage"] = sessionStorage
+
+	robotStorage, err := postgres.NewRobotStorage(db)
+	if err != nil {
+		logger.Fatalf("Can't create robot storage: %s", err)
+	}
+
+	closers["robot_storage"] = robotStorage
+
+	return &storages{userStorage, sessionStorage, robotStorage}, closers
+}
+
+func initServer(h *handler.Handler, host string, port string) *http.Server {
+	r := routes(h)
+	addr := net.JoinHostPort(host, port)
+	srv := &http.Server{Addr: addr, Handler: r}
+
+	return srv
 }
 
 func routes(h *handler.Handler) *chi.Mux {
@@ -131,7 +159,6 @@ func gracefulShutdown(srv *http.Server, timeout time.Duration, logger logger.Log
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatalf("Could not shutdown server:%v", err)
 	}
-
 }
 
 func initLogger() logger.Logger {

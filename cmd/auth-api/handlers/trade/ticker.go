@@ -7,53 +7,48 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 	"io"
 )
 
 type Ticker struct {
-	name    string
-	robots  []*robot.Robot
-	clients map[*Client]bool
-	//send      chan []*r.Robot
+	name         string
+	robots       []*robot.Robot
+	clients      map[*Client]bool
 	start        chan []*robot.Robot
 	stop         chan bool
 	stopDeals    chan bool
 	broadcast    chan []*robot.Robot
 	id           map[int64]*Client
 	robotStorage *postgres.RobotStorage
-	ws *socket.Hub
+	ws           *socket.Hub
+	logger       logger.Logger
 }
 
 func (t *Ticker) run() {
-	fmt.Println("start run for ticker")
+	t.logger.Infof("Start ticker with name: %v", t.name)
+
 	for {
 		select {
 		case robots := <-t.start:
-			fmt.Println("creating ticker")
 			for _, r := range robots {
-				client := initClient(t, r, t.robotStorage, t.ws)
+				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
 				t.clients[client] = true
+
 				client.work()
 			}
 		case <-t.stop:
 			t.stopDeals <- true
-			for c, _ := range t.clients {
+			for c := range t.clients {
 				delete(t.clients, c)
 				close(c.send)
 			}
+
 			return
-			//case robots := <-t.broadcast:
-			//	for _, r := range robots {
-			//		if _, ok := t.id[r.RobotID]; ok {
-			//			t.id[r.RobotID].send <- r
-			//		}
-			//	}
 		}
 	}
 }
 
-func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub) *Client {
+func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub, l logger.Logger) *Client {
 	c := &Client{
 		ticker:       t,
 		r:            r,
@@ -61,35 +56,37 @@ func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket
 		isBuying:     false,
 		isSelling:    false,
 		robotStorage: rs,
-		ws: ws,
+		ws:           ws,
+		logger:       l,
 	}
 
 	return c
 }
 
 func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
-	//defer close(t.stopDeals)
-	fmt.Println("start making deals...")
+	t.logger.Infof("Start making deals for ticker with name: %v", t.name)
+
 	priceRequest := pb.PriceRequest{Ticker: t.name}
+
 	resp, err := service.Price(context.Background(), &priceRequest)
 	if err != nil {
 		l.Errorf("can't get prices from stream: %v", err)
 		return
 	}
-	fmt.Println("get prices")
 
 	for {
 		lot, err := resp.Recv()
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			l.Errorf("can't get price from request: %v", err)
 			return
 		}
+
 		for c := range t.clients {
 			c.send <- lot
 		}
 	}
-
 }
