@@ -2,6 +2,7 @@ package trade
 
 import (
 	"context"
+	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -21,6 +22,7 @@ type Ticker struct {
 	broadcast    chan []*robot.Robot
 	id           map[int64]*Client
 	robotStorage *postgres.RobotStorage
+	ws *socket.Hub
 }
 
 func (t *Ticker) run() {
@@ -30,8 +32,8 @@ func (t *Ticker) run() {
 		case robots := <-t.start:
 			fmt.Println("creating ticker")
 			for _, r := range robots {
-				client := initClient(t, r, t.robotStorage)
-					t.clients[client] = true
+				client := initClient(t, r, t.robotStorage, t.ws)
+				t.clients[client] = true
 				client.work()
 			}
 		case <-t.stop:
@@ -51,20 +53,22 @@ func (t *Ticker) run() {
 	}
 }
 
-func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage) *Client {
+func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub) *Client {
 	c := &Client{
-		ticker:t,
-		r: r,
-		send: make(chan *pb.PriceResponse),
-		isBuying: false,
-		isSelling: false,
+		ticker:       t,
+		r:            r,
+		send:         make(chan *pb.PriceResponse),
+		isBuying:     false,
+		isSelling:    false,
 		robotStorage: rs,
+		ws: ws,
 	}
 
 	return c
 }
 
 func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
+	//defer close(t.stopDeals)
 	fmt.Println("start making deals...")
 	priceRequest := pb.PriceRequest{Ticker: t.name}
 	resp, err := service.Price(context.Background(), &priceRequest)
@@ -74,29 +78,18 @@ func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
 	}
 	fmt.Println("get prices")
 
-	defer close(t.stopDeals)
-
 	for {
-		select {
-		case <-t.stopDeals:
+		lot, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			l.Errorf("can't get price from request: %v", err)
 			return
-		default:
-			lot, err := resp.Recv()
-			//fmt.Println("Ticker:", lot)
-			//if lot == nil {
-			//	continue
-			//}
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				l.Errorf("can't get price from request: %v", err)
-			}
-			for c := range t.clients {
-				c.send <- lot
-			}
-
-			//fmt.Printf("Ticker: %v; %v, %v, %v\n", t.name, lot.SellPrice, lot.BuyPrice, lot.Ts)
+		}
+		for c := range t.clients {
+			c.send <- lot
 		}
 	}
+
 }

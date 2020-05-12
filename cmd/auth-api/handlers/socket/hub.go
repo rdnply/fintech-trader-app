@@ -1,4 +1,4 @@
-package websocket
+package socket
 
 import (
 	"cw1/internal/robot"

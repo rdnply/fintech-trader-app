@@ -1,6 +1,7 @@
 package trade
 
 import (
+	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -15,6 +16,7 @@ type Trader struct {
 	robotStorage   *postgres.RobotStorage
 	hub            *Hub
 	tickers        map[string]bool
+	ws             *socket.Hub
 }
 
 type trade struct {
@@ -22,13 +24,14 @@ type trade struct {
 	robots []*robot.Robot
 }
 
-func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage) *Trader {
+func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage, ws *socket.Hub) *Trader {
 	return &Trader{
 		logger:         l,
 		tradingService: tc,
 		robotStorage:   rs,
 		hub:            NewHub(tc, l, rs),
 		tickers:        make(map[string]bool),
+		ws:             ws,
 	}
 }
 
@@ -55,10 +58,9 @@ func (t *Trader) StartDeals(quit chan bool) {
 					toDelete[k] = true
 				}
 
-
 				for k, v := range rbtsByTicker {
 					if !t.tickers[k] {
-						ticker := initTicker(k, v, t.robotStorage)
+						ticker := initTicker(k, v, t.robotStorage, t.ws)
 						t.hub.register <- ticker
 					}
 					toDelete[k] = false
@@ -66,18 +68,19 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 				for k, del := range toDelete {
 					if del {
-						ticker := initTicker(k, nil, t.robotStorage)
+						ticker := initTicker(k, nil, t.robotStorage, t.ws)
 						t.hub.unregister <- ticker
 					}
 				}
 
 				for k, del := range toDelete {
 					if !del {
-						trade := &trade{k,  rbtsByTicker[k]}
+						trade := &trade{k, rbtsByTicker[k]}
 						t.hub.broadcast <- trade
 					}
 				}
 			case <-quit:
+				fmt.Println("quit from trader")
 				ticker.Stop()
 				return
 			}
@@ -86,17 +89,18 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 }
 
-func initTicker(n string , rr []*robot.Robot, rs *postgres.RobotStorage) *Ticker {
+func initTicker(n string, rr []*robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub) *Ticker {
 	t := &Ticker{
-		name: n,
-		robots: rr,
-		clients: make(map[*Client]bool),
-		start: make(chan []*robot.Robot),
-		stop: make(chan bool),
-		stopDeals: make(chan bool),
-		broadcast: make(chan []*robot.Robot),
-		id: make(map[int64]*Client),
+		name:         n,
+		robots:       rr,
+		clients:      make(map[*Client]bool),
+		start:        make(chan []*robot.Robot),
+		stop:         make(chan bool),
+		stopDeals:    make(chan bool),
+		broadcast:    make(chan []*robot.Robot),
+		id:           make(map[int64]*Client),
 		robotStorage: rs,
+		ws: ws,
 	}
 
 	return t
@@ -116,4 +120,3 @@ func getRobotsByTicker(rr []*robot.Robot) map[string][]*robot.Robot {
 
 	return res
 }
-

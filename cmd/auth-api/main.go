@@ -4,7 +4,7 @@ import (
 	"context"
 	"cw1/cmd/auth-api/handlers"
 	"cw1/cmd/auth-api/handlers/trade"
-	"cw1/cmd/auth-api/handlers/websocket"
+	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -58,7 +58,7 @@ func main() {
 
 	defer handleCloser(logger, "robot_storage", sessionStorage)
 
-	hub := websocket.NewHub()
+	hub := socket.NewHub()
 	go hub.Run()
 
 	h, err := handler.New(logger, userStorage, sessionStorage, robotStorage, hub)
@@ -84,7 +84,8 @@ func main() {
 	tradingClient := pb.NewTradingServiceClient(conn)
 
 	logger.Infof("Server is running at %v", addr)
-	tr := trade.New(logger, tradingClient, robotStorage)
+	tr := trade.New(logger, tradingClient, robotStorage, hub)
+
 
 	quit := make(chan bool)
 	go tr.StartDeals(quit)
@@ -92,6 +93,7 @@ func main() {
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+
 	quit <- true
 }
 

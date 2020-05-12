@@ -1,6 +1,7 @@
 package trade
 
 import (
+	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -15,6 +16,7 @@ type Client struct {
 	isBuying bool
 	isSelling bool
 	robotStorage   *postgres.RobotStorage
+	ws *socket.Hub
 }
 
 func (c *Client) work() {
@@ -58,6 +60,7 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 		if err != nil {
 			fmt.Errorf("can't update robot for change trading info")
 		}
+		c.ws.Broadcast(c.r)
 		fmt.Println("make update for robot id:", c.r.RobotID)
 		c.isBuying = true
 	}
@@ -70,6 +73,4 @@ func isValid(r *robot.Robot) bool {
 
 	return true
 }
-//func (c *Client) updateRobot() {
-//
-//}
+

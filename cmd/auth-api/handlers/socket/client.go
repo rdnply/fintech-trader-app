@@ -1,4 +1,4 @@
-package websocket
+package socket
 
 import (
 	"cw1/cmd/auth-api/httperror"
@@ -64,7 +64,7 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't open websocket connection\n")
+		ctx := fmt.Sprintf("Can't open socket connection\n")
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 

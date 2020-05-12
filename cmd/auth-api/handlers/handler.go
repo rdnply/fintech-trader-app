@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"cw1/cmd/auth-api/handlers/websocket"
+	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/cmd/auth-api/httperror"
 	"cw1/internal/format"
 	"cw1/internal/postgres"
@@ -17,12 +17,12 @@ type Handler struct {
 	userStorage    *postgres.UserStorage
 	sessionStorage *postgres.SessionStorage
 	robotStorage   *postgres.RobotStorage
-	hub            *websocket.Hub
+	hub            *socket.Hub
 	tmplts         map[string]*template.Template
 }
 
 func New(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage,
-	rt *postgres.RobotStorage, hb *websocket.Hub) (*Handler, error) {
+	rt *postgres.RobotStorage, hb *socket.Hub) (*Handler, error) {
 	t, err := parseTemplates()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't parse templates for handler")
@@ -80,7 +80,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
 	})
 	r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
-		return websocket.ServeWS(h.hub, w, r)
+		return socket.ServeWS(h.hub, w, r)
 	}, h.logger}.ServeHTTP)
 
 	return r

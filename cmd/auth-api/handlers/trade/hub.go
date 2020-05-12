@@ -14,9 +14,9 @@ type Hub struct {
 	unregister chan *Ticker
 	broadcast  chan *trade
 	//robots     chan []*r.Robot
-	logger     logger.Logger
-	names      map[string]*Ticker
-	robotStorage   *postgres.RobotStorage
+	logger       logger.Logger
+	names        map[string]*Ticker
+	robotStorage *postgres.RobotStorage
 }
 
 func NewHub(s pb.TradingServiceClient, l logger.Logger, rs *postgres.RobotStorage) *Hub {
@@ -60,4 +60,3 @@ func (h *Hub) Run() {
 	}
 
 }
-
