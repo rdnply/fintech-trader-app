@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"cw1/cmd/auth-api/handlers"
-	"cw1/cmd/auth-api/handlers/trader"
+	"cw1/cmd/auth-api/handlers/trade"
 	"cw1/cmd/auth-api/handlers/websocket"
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
@@ -83,7 +83,7 @@ func main() {
 	tradingClient := pb.NewTradingServiceClient(conn)
 
 	logger.Infof("Server is running at %v", addr)
-	tr := trader.New(logger, tradingClient, robotStorage, hub)
+	tr := trade.New(logger, tradingClient, robotStorage)
 	quit := make(chan bool)
 	go tr.StartDeals(quit)
 
