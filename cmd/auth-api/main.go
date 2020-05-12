@@ -70,10 +70,11 @@ func main() {
 	addr := net.JoinHostPort("", "5000")
 	srv := &http.Server{Addr: addr, Handler: r}
 
+
 	const Duration = 5
 	go gracefulShutdown(srv, Duration*time.Second, logger)
 
-	conn, err := grpc.Dial(":8000", grpc.WithInsecure())
+	conn, err := grpc.Dial(":8000", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		logger.Fatalf("Can't create connection to price streamer: ", err)
 	}
@@ -84,6 +85,7 @@ func main() {
 
 	logger.Infof("Server is running at %v", addr)
 	tr := trade.New(logger, tradingClient, robotStorage)
+
 	quit := make(chan bool)
 	go tr.StartDeals(quit)
 
@@ -127,6 +129,7 @@ func gracefulShutdown(srv *http.Server, timeout time.Duration, logger logger.Log
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatalf("Could not shutdown server:%v", err)
 	}
+
 }
 
 func initLogger() logger.Logger {

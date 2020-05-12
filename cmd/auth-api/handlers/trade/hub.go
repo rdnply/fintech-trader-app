@@ -1,6 +1,7 @@
 package trade
 
 import (
+	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
 	"fmt"
@@ -12,19 +13,21 @@ type Hub struct {
 	register   chan *Ticker
 	unregister chan *Ticker
 	broadcast  chan *trade
-	//robots     chan []*robot.Robot
+	//robots     chan []*r.Robot
 	logger     logger.Logger
 	names      map[string]*Ticker
+	robotStorage   *postgres.RobotStorage
 }
 
-func NewHub(s pb.TradingServiceClient, l logger.Logger) *Hub {
+func NewHub(s pb.TradingServiceClient, l logger.Logger, rs *postgres.RobotStorage) *Hub {
 	return &Hub{
-		service:    s,
-		tickers:    make(map[*Ticker]bool),
-		broadcast:  make(chan *trade),
-		register:   make(chan *Ticker),
-		unregister: make(chan *Ticker),
-		logger:     l,
+		service:      s,
+		tickers:      make(map[*Ticker]bool),
+		broadcast:    make(chan *trade),
+		register:     make(chan *Ticker),
+		unregister:   make(chan *Ticker),
+		logger:       l,
+		robotStorage: rs,
 	}
 }
 
@@ -49,7 +52,7 @@ func (h *Hub) Run() {
 				close(ticker.stop)
 			}
 		case trade := <-h.broadcast:
-			fmt.Println("make broadcase in hub for ticker...")
+			fmt.Println("make broadcast in hub for ticker...")
 			if _, ok := h.names[trade.ticker]; ok {
 				h.names[trade.ticker].broadcast <- trade.robots
 			}
@@ -58,14 +61,3 @@ func (h *Hub) Run() {
 
 }
 
-//func (h *Hub) Broadcast(rbt *robot.Robot) {
-//	done := make(chan bool)
-//
-//	go func() {
-//		h.broadcast <- rbt
-//		done <- true
-//	}()
-//
-//	<-done
-//	close(done)
-//}

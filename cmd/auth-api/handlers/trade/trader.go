@@ -27,13 +27,13 @@ func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage)
 		logger:         l,
 		tradingService: tc,
 		robotStorage:   rs,
-		hub:            NewHub(tc, l),
+		hub:            NewHub(tc, l, rs),
 		tickers:        make(map[string]bool),
 	}
 }
 
 func (t *Trader) StartDeals(quit chan bool) {
-	ticker := time.NewTicker(time.Second * 10)
+	ticker := time.NewTicker(time.Second * 15)
 	t.logger.Infof("Start trade")
 	go t.hub.Run()
 
@@ -43,7 +43,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 			case <-ticker.C:
 				rbts, err := t.robotStorage.GetActiveRobots()
 				if err != nil {
-					t.logger.Errorf("Can't get active robots from storage: %del", err)
+					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}
 
 				fmt.Println(rbts)
@@ -58,7 +58,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 				for k, v := range rbtsByTicker {
 					if !t.tickers[k] {
-						ticker := initTicker(k, v)
+						ticker := initTicker(k, v, t.robotStorage)
 						t.hub.register <- ticker
 					}
 					toDelete[k] = false
@@ -66,7 +66,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 				for k, del := range toDelete {
 					if del {
-						ticker := initTicker(k, nil)
+						ticker := initTicker(k, nil, t.robotStorage)
 						t.hub.unregister <- ticker
 					}
 				}
@@ -77,15 +77,6 @@ func (t *Trader) StartDeals(quit chan bool) {
 						t.hub.broadcast <- trade
 					}
 				}
-
-
-				//var wg sync.WaitGroup
-				//for k, del := range rbtsByTicker {
-				//	//wg.Add(1)
-				//	makeDeals(&wg, k, del, t.tradingService, t.logger)
-				//}
-				////wg.Wait()
-				//fmt.Println(rbtsByTicker)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -95,7 +86,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 }
 
-func initTicker(n string , rr []*robot.Robot) *Ticker {
+func initTicker(n string , rr []*robot.Robot, rs *postgres.RobotStorage) *Ticker {
 	t := &Ticker{
 		name: n,
 		robots: rr,
@@ -105,6 +96,7 @@ func initTicker(n string , rr []*robot.Robot) *Ticker {
 		stopDeals: make(chan bool),
 		broadcast: make(chan []*robot.Robot),
 		id: make(map[int64]*Client),
+		robotStorage: rs,
 	}
 
 	return t
@@ -125,25 +117,3 @@ func getRobotsByTicker(rr []*robot.Robot) map[string][]*robot.Robot {
 	return res
 }
 
-//func makeDeals(wg *sync.WaitGroup, ticker string, rr []int64, service pb.TradingServiceClient, l logger.Logger) {
-//	priceRequest := pb.PriceRequest{Ticker: ticker}
-//	resp, err := service.Price(context.Background(), &priceRequest)
-//	if err != nil {
-//		l.Errorf("can't get prices from stream: %v", err)
-//		return
-//	}
-//	fmt.Println("get prices")
-//	for {
-//		lot, err := resp.Recv()
-//		if err == io.EOF {
-//			wg.Done()
-//			break
-//		}
-//		if err != nil {
-//			l.Errorf("can't get price from request: %v", err)
-//		}
-//
-//		fmt.Printf("Ticker: %v; %v, %v, %v\n", ticker, lot.SellPrice, lot.BuyPrice, lot.Ts)
-//	}
-//
-//}

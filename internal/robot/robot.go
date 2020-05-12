@@ -15,8 +15,11 @@ type Robot struct {
 	SellPrice     *format.NullFloat64 `json:"sell_price,omitempty"`
 	PlanStart     *format.NullTime    `json:"plan_start,omitempty"`
 	PlanEnd       *format.NullTime    `json:"plan_end,omitempty"`
+	//PlanYield     float64 `json:"plan_yield,omitempty"`
+	//FactYield     float64 `json:"fact_yield,omitempty"`
 	PlanYield     *format.NullFloat64 `json:"plan_yield,omitempty"`
 	FactYield     *format.NullFloat64 `json:"fact_yield,omitempty"`
+	//DealsCount    int64   `json:"deals_count,omitempty"`
 	DealsCount    *format.NullInt64   `json:"deals_count,omitempty"`
 	ActivatedAt   *format.NullTime    `json:"activated_at,omitempty"`
 	DeactivatedAt *format.NullTime    `json:"deactivated_at,omitempty"`
