@@ -1,7 +1,7 @@
 package trade
 
 import (
-	"cw1/cmd/auth-api/handlers/socket"
+	"cw1/cmd/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -39,7 +39,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 
 	ticker := time.NewTicker(time.Second * Timeout)
 
-	t.logger.Infof("Start making deals")
+	//t.logger.Infof("Start making deals")
 
 	go t.hub.Run()
 
@@ -53,7 +53,6 @@ func (t *Trader) StartDeals(quit chan bool) {
 				}
 
 				rbtsByTicker := getRobotsByTicker(rbts)
-
 				t.work(rbtsByTicker)
 			case <-quit:
 				t.logger.Infof("Quit from trader")

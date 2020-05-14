@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"cw1/cmd/auth-api/handlers/socket"
 	"cw1/cmd/auth-api/httperror"
+	"cw1/cmd/socket"
 	"cw1/internal/format"
 	"cw1/internal/postgres"
 	"cw1/pkg/log/logger"

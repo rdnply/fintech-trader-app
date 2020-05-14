@@ -2,7 +2,7 @@ package trade
 
 import (
 	"context"
-	"cw1/cmd/auth-api/handlers/socket"
+	"cw1/cmd/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -25,8 +25,7 @@ type Ticker struct {
 }
 
 func (t *Ticker) run() {
-	t.logger.Infof("Start ticker with name: %v", t.name)
-
+	//t.logger.Infof("Start ticker with name: %v", t.name)
 	for {
 		select {
 		case robots := <-t.start:
@@ -64,8 +63,7 @@ func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket
 }
 
 func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
-	t.logger.Infof("Start making deals for ticker with name: %v", t.name)
-
+	//t.logger.Infof("Start making deals for ticker with name: %v", t.name)
 	priceRequest := pb.PriceRequest{Ticker: t.name}
 
 	resp, err := service.Price(context.Background(), &priceRequest)

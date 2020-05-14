@@ -1,7 +1,7 @@
 package trade
 
 import (
-	"cw1/cmd/auth-api/handlers/socket"
+	"cw1/cmd/socket"
 	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
@@ -12,11 +12,13 @@ type Client struct {
 	ticker       *Ticker
 	r            *robot.Robot
 	send         chan *pb.PriceResponse
-	isBuying     bool
-	isSelling    bool
 	robotStorage *postgres.RobotStorage
 	ws           *socket.Hub
 	logger       logger.Logger
+	isBuying     bool
+	isSelling    bool
+	buyPrice     float64
+	sellPrice    float64
 }
 
 func (c *Client) work() {
@@ -24,7 +26,7 @@ func (c *Client) work() {
 		close(c.send)
 	}()
 
-	c.logger.Infof("Start client with id: %v", c.r.RobotID)
+	//c.logger.Infof("Start client with id: %v", c.r.RobotID)
 
 	for lot := range c.send {
 		c.canMakeTrade(lot)
@@ -37,20 +39,20 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 	}
 
 	if c.isBuying && c.r.BuyPrice.V.Float64 >= resp.BuyPrice {
-		c.r.BuyPrice.V.Float64 = resp.BuyPrice
+		c.buyPrice = resp.BuyPrice
 		c.isBuying = false
 		c.isSelling = true
 		c.logger.Infof("Buy lot: %v", resp)
 	}
 
 	if c.isSelling && c.r.SellPrice.V.Float64 <= resp.SellPrice {
-		c.r.SellPrice.V.Float64 = resp.SellPrice
+		c.sellPrice = resp.SellPrice
 		c.isSelling = false
 		c.logger.Infof("Sell lot: %v", resp)
 	}
 
 	if !c.isSelling && !c.isBuying {
-		c.r.FactYield.V.Float64 += c.r.SellPrice.V.Float64 - c.r.BuyPrice.V.Float64
+		c.r.FactYield.V.Float64 += c.sellPrice - c.buyPrice
 		c.r.DealsCount.V.Int64++
 
 		err := c.robotStorage.Update(c.r)

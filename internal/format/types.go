@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"time"
 )
@@ -162,9 +163,20 @@ func (nt *NullTime) Scan(value interface{}) error {
 	}
 
 	if reflect.TypeOf(value) == nil {
-		*nt = NullTime{V: sql.NullTime{Time: t.Time.UTC(), Valid: false}}
+		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: false}}
 	} else {
-		*nt = NullTime{V: sql.NullTime{Time: t.Time.UTC(), Valid: true}}
+		const layout = "2006-01-02T15:04:05Z"
+
+		fmt.Println("Time with timezone: ", t.Time)
+		s := t.Time.Format(layout)
+		fmt.Println("Time after format: ", s)
+		ti, err := time.Parse(layout, s)
+		fmt.Println("Time after parsing: ", ti)
+		if err != nil {
+			return err
+		}
+		fmt.Println("here: ", t.Time)
+		*nt = NullTime{V: sql.NullTime{Time: ti, Valid: true}}
 	}
 
 	return nil
@@ -185,12 +197,12 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 
 	t := nt.V.Time
 	s := t.Format(time.RFC3339)
-	//t, err := time.Parse("2006-01-02T15:04:05Z", s)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//s = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
-	//	t.Hour(), t.Minute(), t.Second())
+	t, err := time.Parse("2006-01-02T15:04:05Z", s)
+	if err != nil {
+		return nil, err
+	}
+	s = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
 
 	return []byte(`"` + s + `"`), nil
 }

@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	handler "cw1/cmd/auth-api/handlers"
-	"cw1/cmd/auth-api/handlers/socket"
-	"cw1/cmd/auth-api/handlers/trade"
+	"cw1/cmd/socket"
+	"cw1/cmd/trade"
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -23,6 +24,7 @@ import (
 )
 
 func main() {
+	fmt.Println("start")
 	logger := initLogger()
 
 	st, closers := initStorages(logger)
@@ -42,7 +44,7 @@ func main() {
 	const Duration = 5
 	go gracefulShutdown(srv, Duration*time.Second, logger)
 
-	conn, err := grpc.Dial(":8000", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(":8000", grpc.WithInsecure())
 	if err != nil {
 		logger.Fatalf("Can't create connection to price streamer: ", err)
 	}
