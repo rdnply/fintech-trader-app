@@ -1,2 +1,75 @@
-{"level":"info","ts":"2020-05-15T13:46:18+03:00","caller":"runtime/proc.go:203","msg":"Server is running at 5000"}
-{"level":"info","ts":"2020-05-15T13:46:18+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start running hub for tickers"}
+{"level":"info","ts":"2020-05-15T14:19:04+03:00","caller":"runtime/proc.go:203","msg":"Server is running at 5000"}
+{"level":"info","ts":"2020-05-15T14:19:04+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start running hub for tickers"}
+{"level":"info","ts":"2020-05-15T14:19:07+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:10+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541550  nanos:622183800}"}
+{"level":"info","ts":"2020-05-15T14:19:10+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:12+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:20  ts:{seconds:1589541552  nanos:275300300}"}
+{"level":"info","ts":"2020-05-15T14:19:13+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:13+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:29  sell_price:28  ts:{seconds:1589541553  nanos:990158200}"}
+{"level":"info","ts":"2020-05-15T14:19:13+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:14+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541554  nanos:656983600}"}
+{"level":"info","ts":"2020-05-15T14:19:15+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541555  nanos:943687600}"}
+{"level":"info","ts":"2020-05-15T14:19:15+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541555  nanos:945485600}"}
+{"level":"info","ts":"2020-05-15T14:19:15+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:16+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:18  sell_price:17  ts:{seconds:1589541556  nanos:613224700}"}
+{"level":"info","ts":"2020-05-15T14:19:16+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:18+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:18  ts:{seconds:1589541558  nanos:942161700}"}
+{"level":"info","ts":"2020-05-15T14:19:19+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:20+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:8  sell_price:5  ts:{seconds:1589541560  nanos:275238900}"}
+{"level":"info","ts":"2020-05-15T14:19:22+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:30  sell_price:27  ts:{seconds:1589541562  nanos:280681800}"}
+{"level":"info","ts":"2020-05-15T14:19:22+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:22+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:25+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:32  sell_price:29  ts:{seconds:1589541565  nanos:611678900}"}
+{"level":"info","ts":"2020-05-15T14:19:25+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:25+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:26+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:19  ts:{seconds:1589541566  nanos:274705700}"}
+{"level":"info","ts":"2020-05-15T14:19:28+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:18  sell_price:15  ts:{seconds:1589541568  nanos:612704100}"}
+{"level":"info","ts":"2020-05-15T14:19:28+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:29+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:13  sell_price:12  ts:{seconds:1589541569  nanos:272841100}"}
+{"level":"info","ts":"2020-05-15T14:19:31+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:32+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:16  sell_price:13  ts:{seconds:1589541572  nanos:271968300}"}
+{"level":"info","ts":"2020-05-15T14:19:32+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541572  nanos:943243500}"}
+{"level":"info","ts":"2020-05-15T14:19:32+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:34+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:37+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:38+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:20  sell_price:19  ts:{seconds:1589541578  nanos:942881200}"}
+{"level":"info","ts":"2020-05-15T14:19:39+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541579  nanos:626264300}"}
+{"level":"info","ts":"2020-05-15T14:19:39+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541579  nanos:692605100}"}
+{"level":"info","ts":"2020-05-15T14:19:39+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:40+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:41+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541581  nanos:940031400}"}
+{"level":"info","ts":"2020-05-15T14:19:42+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541582  nanos:276340800}"}
+{"level":"info","ts":"2020-05-15T14:19:42+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541582  nanos:280477500}"}
+{"level":"info","ts":"2020-05-15T14:19:42+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:43+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541583  nanos:274355300}"}
+{"level":"info","ts":"2020-05-15T14:19:43+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:43+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:20  ts:{seconds:1589541583  nanos:941191500}"}
+{"level":"info","ts":"2020-05-15T14:19:43+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:44+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:21  ts:{seconds:1589541584  nanos:956088600}"}
+{"level":"info","ts":"2020-05-15T14:19:45+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:19  ts:{seconds:1589541585  nanos:297911200}"}
+{"level":"info","ts":"2020-05-15T14:19:46+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:28  sell_price:27  ts:{seconds:1589541586  nanos:633928000}"}
+{"level":"info","ts":"2020-05-15T14:19:46+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:29  sell_price:26  ts:{seconds:1589541586  nanos:633928000}"}
+{"level":"info","ts":"2020-05-15T14:19:46+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:46+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:46+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:47+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:15  sell_price:12  ts:{seconds:1589541587  nanos:272557400}"}
+{"level":"info","ts":"2020-05-15T14:19:47+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:20  sell_price:19  ts:{seconds:1589541587  nanos:301022300}"}
+{"level":"info","ts":"2020-05-15T14:19:49+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:50+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:19  sell_price:18  ts:{seconds:1589541590  nanos:370318400}"}
+{"level":"info","ts":"2020-05-15T14:19:51+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:20  ts:{seconds:1589541591  nanos:959376300}"}
+{"level":"info","ts":"2020-05-15T14:19:52+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:52+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:22  sell_price:19  ts:{seconds:1589541592  nanos:972895300}"}
+{"level":"info","ts":"2020-05-15T14:19:54+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:27  sell_price:26  ts:{seconds:1589541594  nanos:295006400}"}
+{"level":"info","ts":"2020-05-15T14:19:54+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:54+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:20  sell_price:17  ts:{seconds:1589541594  nanos:613012400}"}
+{"level":"info","ts":"2020-05-15T14:19:55+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:56+03:00","caller":"trade/client.go:31","msg":"Buy lot: buy_price:21  sell_price:19  ts:{seconds:1589541596  nanos:293100400}"}
+{"level":"info","ts":"2020-05-15T14:19:58+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:19:59+03:00","caller":"trade/client.go:31","msg":"Sell lot: buy_price:30  sell_price:28  ts:{seconds:1589541599  nanos:633260500}"}
+{"level":"info","ts":"2020-05-15T14:19:59+03:00","caller":"trade/client.go:31","msg":"Make update for robot with id: 76"}
+{"level":"info","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"info","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Quit from trader"}
+{"level":"error","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"error","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"error","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"error","ts":"2020-05-15T14:20:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}

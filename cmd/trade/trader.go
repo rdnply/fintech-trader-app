@@ -6,6 +6,7 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
+	"fmt"
 	"time"
 )
 
@@ -48,6 +49,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 			select {
 			case <-ticker.C:
 				rbts, err := t.robotStorage.GetActiveRobots()
+				fmt.Println(rbts)
 				if err != nil {
 					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}

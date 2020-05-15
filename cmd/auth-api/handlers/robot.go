@@ -375,14 +375,12 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 
 	rbt.RobotID = rbtID
 
-	fmt.Println("Robot before update: ", rbt.PlanStart)
 	err = h.robotStorage.Update(&rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't update  robot with id: %v in storage", rbtID)
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
-	fmt.Println("Robot after update: ", rbt.PlanStart)
 	err = respondJSON(w, rbt)
 	if err != nil {
 		return err
