@@ -156,6 +156,8 @@ func NewNullTime() *NullTime {
 	return &NullTime{V: sql.NullTime{Time: time.Now(), Valid: true}}
 }
 
+const layout = "2006-01-02T15:04:05Z"
+
 func (nt *NullTime) Scan(value interface{}) error {
 	var t sql.NullTime
 	if err := t.Scan(value); err != nil {
@@ -165,18 +167,7 @@ func (nt *NullTime) Scan(value interface{}) error {
 	if reflect.TypeOf(value) == nil {
 		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: false}}
 	} else {
-		const layout = "2006-01-02T15:04:05Z"
-
-		fmt.Println("Time with timezone: ", t.Time)
-		s := t.Time.Format(layout)
-		fmt.Println("Time after format: ", s)
-		ti, err := time.Parse(layout, s)
-		fmt.Println("Time after parsing: ", ti)
-		if err != nil {
-			return err
-		}
-		fmt.Println("here: ", t.Time)
-		*nt = NullTime{V: sql.NullTime{Time: ti, Valid: true}}
+		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: true}}
 	}
 
 	return nil
@@ -195,10 +186,11 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 		return nil, nil
 	}
 
-	t := nt.V.Time
+	t := nt.V.Time.UTC()
 	s := t.Format(time.RFC3339)
-	t, err := time.Parse("2006-01-02T15:04:05Z", s)
+	t, err := time.Parse(layout, s)
 	if err != nil {
+		nt.V.Valid = false
 		return nil, err
 	}
 	s = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
@@ -210,13 +202,18 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 func (nt *NullTime) UnmarshalJSON(b []byte) error {
 	s := string(b)
 
-	t, err := time.Parse(`"`+time.RFC3339+`"`, s)
+	t, err := time.Parse(`"`+layout+`"`, s)
 	if err != nil {
 		nt.V.Valid = false
 		return err
 	}
 
-	nt.V.Time = t
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return err
+	}
+
+	nt.V.Time = t.In(loc)
 	nt.V.Valid = true
 
 	return nil

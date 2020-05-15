@@ -36,7 +36,7 @@ func PrintNullTime(n *NullTime) string {
 
 	const layout = "2006-01-02T15:04:05Z"
 
-	return n.V.Time.Format(layout)
+	return n.V.Time.UTC().Format(layout)
 }
 
 func JoinNullInt(s string, n *NullInt64) string {

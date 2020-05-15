@@ -4,7 +4,9 @@ import (
 	"cw1/cmd/auth-api/httperror"
 	"cw1/cmd/socket"
 	"cw1/internal/format"
-	"cw1/internal/postgres"
+	"cw1/internal/robot"
+	"cw1/internal/session"
+	"cw1/internal/user"
 	"cw1/pkg/log/logger"
 	"html/template"
 	"net/http"
@@ -15,15 +17,15 @@ import (
 
 type Handler struct {
 	logger         logger.Logger
-	userStorage    *postgres.UserStorage
-	sessionStorage *postgres.SessionStorage
-	robotStorage   *postgres.RobotStorage
+	userStorage    user.Storage
+	sessionStorage session.Storage
+	robotStorage   robot.Storage
 	hub            *socket.Hub
 	tmplts         map[string]*template.Template
 }
 
-func New(logger logger.Logger, ut *postgres.UserStorage, st *postgres.SessionStorage,
-	rt *postgres.RobotStorage, hb *socket.Hub) (*Handler, error) {
+func New(logger logger.Logger, ut user.Storage, st session.Storage,
+	rt robot.Storage, hb *socket.Hub) (*Handler, error) {
 	t, err := parseTemplates()
 	if err != nil {
 		return nil, errors.Wrap(err, "can't parse templates for handler")

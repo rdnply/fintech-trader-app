@@ -8,7 +8,6 @@ import (
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -24,7 +23,6 @@ import (
 )
 
 func main() {
-	fmt.Println("start")
 	logger := initLogger()
 
 	st, closers := initStorages(logger)

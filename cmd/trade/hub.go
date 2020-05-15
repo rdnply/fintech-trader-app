@@ -2,6 +2,7 @@ package trade
 
 import (
 	"cw1/internal/postgres"
+	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
 )
@@ -14,7 +15,7 @@ type Hub struct {
 	broadcast    chan *trade
 	logger       logger.Logger
 	names        map[string]*Ticker
-	robotStorage *postgres.RobotStorage
+	robotStorage robot.Storage
 }
 
 func NewHub(s pb.TradingServiceClient, l logger.Logger, rs *postgres.RobotStorage) *Hub {

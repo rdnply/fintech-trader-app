@@ -5,11 +5,21 @@ import (
 	"time"
 )
 
+const layout = "2006-01-02T15:04:05Z"
+
 func main() {
-	t := time.Date(2009, time.November, 10, 12, 4, 0, 0, time.Local)
-	fmt.Println(t.Format(time.RFC3339))
-	formatted := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
-		t.Year(), t.Month(), t.Day(),
-		t.Hour(), t.Minute(), t.Second())
-	fmt.Println(formatted)
+	s := "2022-10-02T22:00:00Z"
+	t, err := time.Parse( layout, s)
+	if err != nil {
+		fmt.Errorf("%v", err)
+	}
+
+	fmt.Println("Normal: ", t)
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		fmt.Errorf("%v", err)
+	}
+
+
+	fmt.Println("Loc: ", t.In(loc))
 }

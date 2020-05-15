@@ -12,7 +12,7 @@ import (
 type Trader struct {
 	logger         logger.Logger
 	tradingService pb.TradingServiceClient
-	robotStorage   *postgres.RobotStorage
+	robotStorage   robot.Storage
 	hub            *Hub
 	tickers        map[string]bool
 	ws             *socket.Hub
@@ -102,7 +102,7 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 	<-done
 }
 
-func initTicker(n string, rr []*robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub, l logger.Logger) *Ticker {
+func initTicker(n string, rr []*robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger) *Ticker {
 	t := &Ticker{
 		name:         n,
 		robots:       rr,

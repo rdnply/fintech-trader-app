@@ -3,7 +3,6 @@ package trade
 import (
 	"context"
 	"cw1/cmd/socket"
-	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -19,7 +18,7 @@ type Ticker struct {
 	stopDeals    chan bool
 	broadcast    chan []*robot.Robot
 	id           map[int64]*Client
-	robotStorage *postgres.RobotStorage
+	robotStorage robot.Storage
 	ws           *socket.Hub
 	logger       logger.Logger
 }
@@ -47,7 +46,7 @@ func (t *Ticker) run() {
 	}
 }
 
-func initClient(t *Ticker, r *robot.Robot, rs *postgres.RobotStorage, ws *socket.Hub, l logger.Logger) *Client {
+func initClient(t *Ticker, r *robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger) *Client {
 	c := &Client{
 		ticker:       t,
 		r:            r,

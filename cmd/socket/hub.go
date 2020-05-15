@@ -46,11 +46,12 @@ func (h *Hub) Run() {
 func (h *Hub) Broadcast(rbt *robot.Robot) {
 	done := make(chan bool)
 
+	defer close(done)
+
 	go func() {
 		h.broadcast <- rbt
 		done <- true
 	}()
 
 	<-done
-	close(done)
 }

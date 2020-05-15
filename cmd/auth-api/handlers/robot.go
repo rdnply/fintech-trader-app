@@ -174,13 +174,14 @@ func (h *Handler) makeFavourite(w http.ResponseWriter, r *http.Request) error {
 }
 
 func copyForFavourite(old *robot.Robot, ownerID int64) *robot.Robot {
-	old.OwnerUserID = ownerID
-	old.ParentRobotID = format.NewNullInt64(old.RobotID)
-	old.IsFavourite = true
-	old.IsActive = false
-	old.ActivatedAt = nil
+	res := old
+	res.OwnerUserID = ownerID
+	res.ParentRobotID = format.NewNullInt64(old.RobotID)
+	res.IsFavourite = true
+	res.IsActive = false
+	res.ActivatedAt = nil
 
-	return old
+	return res
 }
 
 func (h *Handler) activate(w http.ResponseWriter, r *http.Request) error {
@@ -374,12 +375,14 @@ func (h *Handler) updateRobot(w http.ResponseWriter, r *http.Request) error {
 
 	rbt.RobotID = rbtID
 
+	fmt.Println("Robot before update: ", rbt.PlanStart)
 	err = h.robotStorage.Update(&rbt)
 	if err != nil {
 		ctx := fmt.Sprintf("Can't update  robot with id: %v in storage", rbtID)
 		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
 	}
 
+	fmt.Println("Robot after update: ", rbt.PlanStart)
 	err = respondJSON(w, rbt)
 	if err != nil {
 		return err

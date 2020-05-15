@@ -2,7 +2,6 @@ package trade
 
 import (
 	"cw1/cmd/socket"
-	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -12,7 +11,7 @@ type Client struct {
 	ticker       *Ticker
 	r            *robot.Robot
 	send         chan *pb.PriceResponse
-	robotStorage *postgres.RobotStorage
+	robotStorage robot.Storage
 	ws           *socket.Hub
 	logger       logger.Logger
 	isBuying     bool
