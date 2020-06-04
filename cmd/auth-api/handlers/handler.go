@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"html/template"
+	"net/http"
 )
 
 type Handler struct {
@@ -79,63 +80,10 @@ func (h *Handler) Routes() chi.Router {
 		r.Get("/robot/{id}", h.getRobot)
 		r.Put("/robot/{id}", h.updateRobot)
 	})
+
+	r.HandleFunc("/ws", func(w http.ResponseWriter, rr *http.Request) {
+		socket.ServeWS(h.hub, w, rr)
+	})
+
 	return r
 }
-
-
-//	})
-//	rr.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, rr *http.Request) error {
-//		return socket.ServeWS(h.hub, w, rr)
-//	}, h.logger}.ServeHTTP)
-//
-//	return rr
-//}
-
-//type rootHandler struct {
-//	H      func(http.ResponseWriter, *http.Request) error
-//	logger logger.Logger
-//}
-//
-//func (fn rootHandler) ServeHTTP(w http.ResponseWriter, rr *http.Request) {
-//	err := fn.H(w, rr)
-//	if err == nil {
-//		return
-//	}
-//
-//	clientError, ok := err.(render.ClientError)
-//	if !ok {
-//		fn.logger.Errorf("Can't cast error to Client's error: %v", clientError)
-//		w.WriteHeader(http.StatusInternalServerError)
-//
-//		return
-//	}
-//
-//	fn.logger.Errorf(clientError.Error())
-//
-//	body, err := clientError.ResponseBody()
-//	if err != nil {
-//		fn.logger.Errorf("Can't get info about error because of : %v", err)
-//		w.WriteHeader(http.StatusInternalServerError)
-//
-//		return
-//	}
-//
-//	status, headers := clientError.ResponseHeaders()
-//	for k, v := range headers {
-//		if body == nil && v == "application/json" {
-//			continue
-//		}
-//
-//		w.Header().Set(k, v)
-//	}
-//
-//	w.WriteHeader(status)
-//
-//	c, err := w.Write(body)
-//	if err != nil {
-//		fn.logger.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
-//		w.WriteHeader(http.StatusInternalServerError)
-//
-//		return
-//	}
-//}

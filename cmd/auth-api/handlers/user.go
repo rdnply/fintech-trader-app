@@ -253,7 +253,7 @@ func initUser(u *user.User, id int64) error {
 }
 
 func IDFromParams(r *http.Request) (int64, error) {
-	const IDIndex = 2 // space in first place
+	const IDIndex = 4 // space in first place
 	str := r.URL.String()
 	params := strings.Split(str, "/")
 	id, err := strconv.ParseInt(params[IDIndex], 10, 64)

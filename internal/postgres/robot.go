@@ -19,6 +19,7 @@ type RobotStorage struct {
 	findByOwnerIDAndTickerStmt *sql.Stmt
 	findAllRobotsStmt          *sql.Stmt
 	updateStmt                 *sql.Stmt
+	updateBesidesActiveStmt    *sql.Stmt
 	getActiveRobotsStmt        *sql.Stmt
 }
 
@@ -33,6 +34,7 @@ func NewRobotStorage(db *DB) (*RobotStorage, error) {
 		{Query: findRobotByOwnerIDAndTickerQuery, Dst: &s.findByOwnerIDAndTickerStmt},
 		{Query: findAllRobotsQuery, Dst: &s.findAllRobotsStmt},
 		{Query: updateRobotQuery, Dst: &s.updateStmt},
+		{Query: updateRobotBesidesActiveQuery, Dst: &s.updateBesidesActiveStmt},
 		{Query: getActiveRobotsQuery, Dst: &s.getActiveRobotsStmt},
 	}
 
@@ -130,6 +132,24 @@ func (s *RobotStorage) Update(r *robot.Robot) error {
 
 	return nil
 }
+
+const updateRobotBesidesActiveQuery = "UPDATE robots SET " +
+	"owner_user_id=$2, parent_robot_id=$3, is_favourite=$4, ticker=$5, buy_price=$6, " + //nolint: misspell
+	"sell_price=$7, plan_start=$8, plan_end=$9, plan_yield=$10, fact_yield=$11, deals_count=$12, activated_at=$13, deactivated_at=$14, " +
+	"created_at=$15, deleted_at=$16 " +
+	"WHERE robot_id=$1 RETURNING robot_id, " + robotFields
+
+func (s *RobotStorage) UpdateBesidesActive(r *robot.Robot) error {
+	row := s.updateBesidesActiveStmt.QueryRow(r.RobotID, r.OwnerUserID, r.ParentRobotID, r.IsFavourite, r.Ticker, r.BuyPrice, r.SellPrice,
+		r.PlanStart, r.PlanEnd, r.PlanYield, r.FactYield, r.DealsCount, r.ActivatedAt, r.DeactivatedAt, r.CreatedAt, r.DeletedAt)
+	if err := scanRobot(row, r); err != nil {
+		return errors.Wrap(err, "can't exec query")
+	}
+
+	return nil
+}
+
+
 
 const getActiveRobotsQuery = "SELECT robot_id, " + robotFields + " FROM robots " +
 	"WHERE is_active=true AND ((plan_start at time zone 'utc')::time <= localtime  AND localtime <= (plan_end at time zone 'utc')::time)"

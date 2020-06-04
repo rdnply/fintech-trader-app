@@ -31,5 +31,6 @@ type Storage interface {
 	FindByTicker(ticker string) ([]*Robot, error)
 	GetAll(id int64, ticker string) ([]*Robot, error)
 	Update(r *Robot) error
+	UpdateBesidesActive(r *Robot) error
 	GetActiveRobots() ([]*Robot, error)
 }

@@ -52,10 +52,10 @@ func main() {
 	tradingClient := pb.NewTradingServiceClient(conn)
 
 	logger.Infof("Server is running at %s", "5000")
-	tr := trade.New(logger, tradingClient, st.r, hub)
+	trader := trade.New(logger, tradingClient, st.r, hub)
 
 	quit := make(chan bool)
-	go tr.StartDeals(quit)
+	go trader.StartDeals(quit)
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatal(err)

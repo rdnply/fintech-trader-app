@@ -50,20 +50,22 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 		c.buyPrice = resp.BuyPrice
 		c.isBuying = false
 		c.isSelling = true
-		c.logger.Infof("Buy %v lot with price: buy price:%v, sell price: %v; border for buy: %v", c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.BuyPrice.V.Float64)
+		c.logger.Infof("Buy %v lot with price: buy price:%v, sell price: %v; border for buy: %v",
+			c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.BuyPrice.V.Float64)
 	}
 
 	if c.isSelling && c.r.SellPrice.V.Float64 <= resp.SellPrice {
 		c.sellPrice = resp.SellPrice
 		c.isSelling = false
-		c.logger.Infof("Sell %v lot with price: buy price:%v, sell price: %v; border for sell: %v", c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.SellPrice.V.Float64)
+		c.logger.Infof("Sell %v lot with price: buy price:%v, sell price: %v; border for sell: %v",
+			c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.SellPrice.V.Float64)
 	}
 
 	if !c.isSelling && !c.isBuying {
 		c.r.FactYield.V.Float64 += c.sellPrice - c.buyPrice
 		c.r.DealsCount.V.Int64++
 
-		err := c.robotStorage.Update(c.r)
+		err := c.robotStorage.UpdateBesidesActive(c.r)
 		if err != nil {
 			c.logger.Errorf("Can't update robot with ids: %v", c.r.RobotID)
 		}

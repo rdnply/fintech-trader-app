@@ -112,7 +112,7 @@ func respContains(in string, want string) bool {
 
 func TestSignUpCorrect(t *testing.T) {
 	json := []byte(`{"first_name" : "name","last_name": "last_name","birthday": "1970-01-01","email": "email","password":"123456"}`)
-	req, err := http.NewRequest("POST", "/signup", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/signup", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -150,7 +150,7 @@ func TestSignUpCorrect(t *testing.T) {
 
 func TestSignUpIfUserAlreadyRegistered(t *testing.T) {
 	json := []byte(`{"first_name" : "name","last_name": "last_name","birthday": "1970-01-01","email": "email","password":"123456"}`)
-	req, err := http.NewRequest("POST", "/signup", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/signup", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -190,7 +190,7 @@ func TestSignUpIfUserAlreadyRegistered(t *testing.T) {
 func TestSignUpIncorrectJson(t *testing.T) {
 	//body contains incorrect json(missing a open bracket)
 	json := []byte(`"first_name" : "name","last_name": "last_name","birthday": "1970-01-01","email": "email","password":"123456"}`)
-	req, err := http.NewRequest("POST", "/signup", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/signup", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -229,7 +229,7 @@ func TestSignUpIncorrectJson(t *testing.T) {
 
 func TestSignInCorrect(t *testing.T) {
 	json := []byte(`{"email": "email","password":"123456"}`)
-	req, err := http.NewRequest("POST", "/signin", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/signin", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -274,7 +274,7 @@ func TestSignInCorrect(t *testing.T) {
 
 func TestSignInEmailDontEqual(t *testing.T) {
 	json := []byte(`{"email": "EMAIL","password":"123456"}`)
-	req, err := http.NewRequest("POST", "/signin", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/signin", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -319,7 +319,7 @@ func TestSignInEmailDontEqual(t *testing.T) {
 
 func TestUpdateUserCorrect(t *testing.T) {
 	json := []byte(`{"first_name" : "changed","last_name": "changed","birthday": "2000-01-01","email": "NEWEMAIL","password":"123"}`)
-	req, err := http.NewRequest("PUT", "/users/1", bytes.NewBuffer(json))
+	req, err := http.NewRequest("PUT", "/api/v1/users/1", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -374,7 +374,7 @@ func TestUpdateUserCorrect(t *testing.T) {
 
 func TestUpdateUserIncorrectID(t *testing.T) {
 	json := []byte(`{}`)
-	req, err := http.NewRequest("PUT", "/users/-1", bytes.NewBuffer(json))
+	req, err := http.NewRequest("PUT", "/api/v1/users/-1", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -429,7 +429,7 @@ func TestUpdateUserIncorrectID(t *testing.T) {
 
 func TestUpdateUserNotFind(t *testing.T) {
 	json := []byte(`{"first_name" : "changed","last_name": "changed","birthday": "2000-01-01","email": "NEWEMAIL","password":"123"}`)
-	req, err := http.NewRequest("PUT", "/users/1", bytes.NewBuffer(json))
+	req, err := http.NewRequest("PUT", "/api/v1/users/1", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -483,7 +483,7 @@ func TestUpdateUserNotFind(t *testing.T) {
 }
 
 func TestGetUserCorrect(t *testing.T) {
-	req, err := http.NewRequest("PUT", "/users/1", nil)
+	req, err := http.NewRequest("PUT", "/api/v1/users/1", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -546,7 +546,7 @@ func TestGetUserCorrect(t *testing.T) {
 }
 
 func TestGetUserIncorrectID(t *testing.T) {
-	req, err := http.NewRequest("PUT", "/users/-1", nil)
+	req, err := http.NewRequest("PUT", "/api/v1/users/-1", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -594,7 +594,7 @@ func TestGetUserIncorrectID(t *testing.T) {
 }
 
 func TestGetUserNotFound(t *testing.T) {
-	req, err := http.NewRequest("PUT", "/users/1", nil)
+	req, err := http.NewRequest("PUT", "/api/v1/users/1", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -648,7 +648,7 @@ func TestGetUserNotFound(t *testing.T) {
 }
 
 func TestGetUserRobotsCorrect(t *testing.T) {
-	req, err := http.NewRequest("GET", "/users/1/robots", nil)
+	req, err := http.NewRequest("GET", "/api/v1/users/1/robots", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -710,7 +710,7 @@ func TestGetUserRobotsCorrect(t *testing.T) {
 }
 
 func TestGetUserRobotsUserNotFound(t *testing.T) {
-	req, err := http.NewRequest("GET", "/users/1/robots", nil)
+	req, err := http.NewRequest("GET", "/api/v1/users/1/robots", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -771,7 +771,7 @@ func TestGetUserRobotsUserNotFound(t *testing.T) {
 }
 
 func TestGetUserRobotsCheckTokens(t *testing.T) {
-	req, err := http.NewRequest("GET", "/users/1/robots", nil)
+	req, err := http.NewRequest("GET", "/api/v1/users/1/robots", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}

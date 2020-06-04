@@ -35,7 +35,7 @@ func New(l logger.Logger, tc pb.TradingServiceClient, rs robot.Storage, ws *sock
 }
 
 func (t *Trader) StartDeals(quit chan bool) {
-	const Timeout = 3
+	const Timeout = 5
 
 	tick := time.NewTicker(time.Second * Timeout)
 

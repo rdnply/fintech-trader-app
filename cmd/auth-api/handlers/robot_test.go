@@ -17,7 +17,7 @@ import (
 
 func TestCreateRobotCorrect(t *testing.T) {
 	json := []byte(`{"owner_user_id": 1,"is_favourite": true,"is_active": true}`)
-	req, err := http.NewRequest("POST", "/robot", bytes.NewBuffer(json))
+	req, err := http.NewRequest("POST", "/api/v1/robot", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -76,7 +76,7 @@ func TestCreateRobotCorrect(t *testing.T) {
 }
 
 func TestDeleteRobotCorrect(t *testing.T) {
-	req, err := http.NewRequest("DELETE", "/robot/5", nil)
+	req, err := http.NewRequest("DELETE", "/api/v1/robot/5", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -135,7 +135,7 @@ func TestDeleteRobotCorrect(t *testing.T) {
 }
 
 func TestDeleteRobotNotFound(t *testing.T) {
-	req, err := http.NewRequest("DELETE", "/robot/5", nil)
+	req, err := http.NewRequest("DELETE", "/api/v1/robot/5", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -196,7 +196,7 @@ func TestDeleteRobotNotFound(t *testing.T) {
 }
 
 func TestGetRobotsCorrect(t *testing.T) {
-	req, err := http.NewRequest("GET", "/robots", nil)
+	req, err := http.NewRequest("GET", "/api/v1/robots", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -264,7 +264,7 @@ func TestGetRobotsCorrect(t *testing.T) {
 }
 
 func TestMakeFavouriteCorrect(t *testing.T) {
-	req, err := http.NewRequest("PUT", "/robot/5/favourite", nil)
+	req, err := http.NewRequest("PUT", "/api/v1/robot/5/favourite", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -323,7 +323,7 @@ func TestMakeFavouriteCorrect(t *testing.T) {
 }
 
 func TestActivateCorrect(t *testing.T) {
-	req, err := http.NewRequest("PUT", "/robot/5/activate", nil)
+	req, err := http.NewRequest("PUT", "/api/v1/robot/5/activate", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -386,7 +386,7 @@ func TestActivateCorrect(t *testing.T) {
 }
 
 func TestGetRobot(t *testing.T) {
-	req, err := http.NewRequest("GET", "/robot/5", nil)
+	req, err := http.NewRequest("GET", "/api/v1/robot/5", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -445,7 +445,7 @@ func TestGetRobot(t *testing.T) {
 }
 
 func TestGetRobotNotFound(t *testing.T) {
-	req, err := http.NewRequest("GET", "/robot/5", nil)
+	req, err := http.NewRequest("GET", "/api/v1/robot/5", nil)
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
@@ -510,7 +510,7 @@ func TestUpdateRobotCorrect(t *testing.T) {
 		`"ticker": "AAPL","buy_price": 56.5,"sell_price": 46.78,"plan_start": "2002-10-02T15:00:00.05Z","plan_end": "2002-10-02T19:00:00.05Z",` +
 		`"plan_yield": 1000,"fact_yield": 100,"deals_count": 10,"activated_at": "2002-10-02T15:00:00.05Z",` +
 		`"deactivated_at": "2002-10-02T19:00:00.05Z","created_at": "2000-10-02T19:00:00.05Z"}`)
-	req, err := http.NewRequest("PUT", "/robot/5", bytes.NewBuffer(json))
+	req, err := http.NewRequest("PUT", "/api/v1/robot/5", bytes.NewBuffer(json))
 	if err != nil {
 		t.Fatalf("can't create request %v", err)
 	}
