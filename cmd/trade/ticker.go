@@ -6,7 +6,6 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 	"io"
 	"sync"
 )
@@ -22,7 +21,6 @@ type Ticker struct {
 	robots       []*robot.Robot
 	start        chan bool
 	stop         chan bool
-	//stopDeals    chan bool
 	broadcast    chan []*robot.Robot
 	service      pb.TradingServiceClient
 }
@@ -31,18 +29,16 @@ func (t *Ticker) run() {
 	defer func() {
 		close(t.start)
 		close(t.stop)
-		//close(t.stopDeals)
 		close(t.broadcast)
 	}()
 
 	for {
 		select {
 		case <-t.start:
-			t.logger.Infof("Start name with name: %v", t.name)
+			t.logger.Infof("Start ticker with name: %v", t.name)
 
 			go t.makeDeals()
 
-			fmt.Printf("Robots: (%v) in name with name: %v \n", t.robots, t.name)
 			for _, r := range t.robots {
 				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
 				t.ids[r.RobotID] = client
@@ -54,21 +50,18 @@ func (t *Ticker) run() {
 			}
 		case <-t.stop:
 			t.logger.Infof("Stop ticker with name: %v", t.name)
-			//t.stopDeals <- true
 			t.mu.Lock()
 			for c := range t.clients {
 				t.logger.Infof("Close client with ID: %v", c.r.RobotID)
 				c.unregister <- true
 				delete(t.clients, c)
-				//close(c.send)
 			}
+
 			t.mu.Unlock()
 
 			return
 		case robots := <-t.broadcast:
-			fmt.Println("BROADCAST IN TICKER: ", robots)
 			toWork := t.workWithRobots(robots)
-			fmt.Println("TOWORK: ", toWork)
 			for _, client := range toWork {
 				go client.work()
 			}
@@ -87,9 +80,7 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 			toDelete[k.r.RobotID] = true
 		}
 
-		fmt.Println("ROBOTS:", rbts)
 		for _, r := range rbts {
-			fmt.Println("ROBOT IN ROBOTS:", *r)
 			if _, ok := t.ids[r.RobotID]; !ok {
 				t.logger.Infof("Register client with id: %v", r.RobotID)
 				client := initClient(t, r, t.robotStorage, t.ws, t.logger)

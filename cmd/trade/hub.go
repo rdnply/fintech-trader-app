@@ -4,14 +4,12 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 )
 
 type Hub struct {
 	service      pb.TradingServiceClient
 	tickers      map[*Ticker]bool
 	register     chan *Ticker
-	//unregister   chan *Ticker
 	unregister   chan string
 	broadcast    chan *trade
 	logger       logger.Logger
@@ -39,25 +37,19 @@ func (h *Hub) Run() {
 		select {
 		case ticker := <-h.register:
 			go ticker.run()
-			//go ticker.makeDeals(h.service, h.logger)
 			ticker.start <- true
 
 			h.names[ticker.name] = ticker
 			h.tickers[ticker] = true
 
 		case name := <-h.unregister:
-			h.logger.Infof("Remove ticker in hub with name: %v", name)
-
 			if _, ok := h.names[name]; ok {
 				ticker := h.names[name]
 				ticker.stop <- true
 				delete(h.tickers, ticker)
-				//close(ticker.start)
-				//close(ticker.stop)
 			}
 
 		case trade := <-h.broadcast:
-			fmt.Println("BROADCAST IN HUB: ", trade)
 			if _, ok := h.names[trade.name]; ok {
 				h.names[trade.name].broadcast <- trade.robots
 			}

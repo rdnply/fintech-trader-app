@@ -27,14 +27,14 @@ func (c *Client) work() {
 		close(c.unregister)
 	}()
 
-	c.logger.Infof("Start client for robot with ids: %v", c.r.RobotID)
+	c.logger.Infof("Start client for robot with id: %v", c.r.RobotID)
 
 	for {
 		select {
 		case lot := <-c.send:
 			c.canMakeTrade(lot)
 		case <-c.unregister:
-			c.logger.Infof("Stop client for robot with ids: %v", c.r.RobotID)
+			c.logger.Infof("Stop client for robot with id: %v", c.r.RobotID)
 			return
 		}
 
@@ -67,18 +67,17 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 
 		err := c.robotStorage.UpdateBesidesActive(c.r)
 		if err != nil {
-			c.logger.Errorf("Can't update robot with ids: %v", c.r.RobotID)
+			c.logger.Errorf("can't update robot with ids: %v", c.r.RobotID)
 		}
 
 		c.ws.Broadcast(c.r)
-		c.logger.Infof("Make update for robot with ids: %v(name: %v)", c.r.RobotID, c.ticker.name)
 		c.isBuying = true
 	}
 }
 
 func isValid(r *robot.Robot) bool {
 	if r.BuyPrice == nil || r.SellPrice == nil ||
-	   r.DealsCount == nil || r.FactYield == nil {
+		r.DealsCount == nil || r.FactYield == nil {
 		return false
 	}
 

@@ -5,7 +5,6 @@ import (
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
-	"fmt"
 	"time"
 )
 
@@ -46,13 +45,11 @@ func (t *Trader) StartDeals(quit chan bool) {
 			select {
 			case <-tick.C:
 				rbts, err := t.robotStorage.GetActiveRobots()
-				fmt.Println("Robots: ", rbts)
 				if err != nil {
 					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}
 
 				rbtsByTicker := getRobotsByTicker(rbts)
-				fmt.Println("Map: ", rbtsByTicker)
 				t.work(rbtsByTicker)
 			case <-quit:
 				t.logger.Infof("Quit from trader")
@@ -74,7 +71,6 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 			toDelete[k] = true
 		}
 
-		fmt.Println("start work: ", toDelete)
 		for name, rbts := range rbtsByTicker {
 			if !t.tickers[name] {
 				t.logger.Infof("Register name with name: %v", name)
@@ -86,11 +82,8 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 			toDelete[name] = false
 		}
 
-		fmt.Println("To delete: ", toDelete)
 		for name, del := range toDelete {
 			if del {
-				//name := initTicker(name, nil, t.robotStorage, t.ws, t.logger)
-				t.logger.Infof("Send in hub for delete: %v", name)
 				t.hub.unregister <- name
 				delete(t.tickers, name)
 			}
@@ -98,7 +91,6 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 
 		for name, del := range toDelete {
 			if !del {
-				fmt.Println("To broadcast: ", rbtsByTicker[name])
 				trade := &trade{name, rbtsByTicker[name]}
 				t.hub.broadcast <- trade
 			}
