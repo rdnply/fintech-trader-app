@@ -22,24 +22,27 @@ type Ticker struct {
 	robots       []*robot.Robot
 	start        chan bool
 	stop         chan bool
-	stopDeals    chan bool
+	//stopDeals    chan bool
 	broadcast    chan []*robot.Robot
+	service      pb.TradingServiceClient
 }
 
 func (t *Ticker) run() {
 	defer func() {
 		close(t.start)
 		close(t.stop)
-		close(t.stopDeals)
+		//close(t.stopDeals)
 		close(t.broadcast)
 	}()
 
 	for {
 		select {
 		case <-t.start:
-			t.logger.Infof("Start ticker with name: %v", t.name)
+			t.logger.Infof("Start name with name: %v", t.name)
 
-			fmt.Printf("Robots: (%v) in ticker with name: %v \n", t.robots, t.name)
+			go t.makeDeals()
+
+			fmt.Printf("Robots: (%v) in name with name: %v \n", t.robots, t.name)
 			for _, r := range t.robots {
 				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
 				t.ids[r.RobotID] = client
@@ -51,20 +54,23 @@ func (t *Ticker) run() {
 			}
 		case <-t.stop:
 			t.logger.Infof("Stop ticker with name: %v", t.name)
-			t.stopDeals <- true
+			//t.stopDeals <- true
 			t.mu.Lock()
 			for c := range t.clients {
+				t.logger.Infof("Close client with ID: %v", c.r.RobotID)
+				c.unregister <- true
 				delete(t.clients, c)
-				close(c.send)
+				//close(c.send)
 			}
 			t.mu.Unlock()
 
 			return
 		case robots := <-t.broadcast:
+			fmt.Println("BROADCAST IN TICKER: ", robots)
 			toWork := t.workWithRobots(robots)
-
-			for _, c := range toWork {
-				go c.work()
+			fmt.Println("TOWORK: ", toWork)
+			for _, client := range toWork {
+				go client.work()
 			}
 		}
 	}
@@ -81,17 +87,22 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 			toDelete[k.r.RobotID] = true
 		}
 
+		fmt.Println("ROBOTS:", rbts)
 		for _, r := range rbts {
+			fmt.Println("ROBOT IN ROBOTS:", *r)
 			if _, ok := t.ids[r.RobotID]; !ok {
 				t.logger.Infof("Register client with id: %v", r.RobotID)
 				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
 				t.mu.Lock()
 				t.clients[client] = true
 				t.mu.Unlock()
+				t.ids[r.RobotID] = client
 				toWork = append(toWork, client)
 			} else {
+				t.mu.Lock()
 				client := t.ids[r.RobotID]
 				client.r = r
+				t.mu.Unlock()
 			}
 
 			toDelete[r.RobotID] = false
@@ -99,9 +110,11 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 
 		for id, del := range toDelete {
 			if del {
+				t.logger.Infof("Delete client with id: %v", id)
 				t.ids[id].unregister <- true
 				t.mu.Lock()
 				delete(t.clients, t.ids[id])
+				delete(t.ids, id)
 				t.mu.Unlock()
 			}
 		}
@@ -130,12 +143,12 @@ func initClient(t *Ticker, r *robot.Robot, rs robot.Storage, ws *socket.Hub, l l
 	return c
 }
 
-func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
+func (t *Ticker) makeDeals() {
 	priceRequest := pb.PriceRequest{Ticker: t.name}
 
-	resp, err := service.Price(context.Background(), &priceRequest)
+	resp, err := t.service.Price(context.Background(), &priceRequest)
 	if err != nil {
-		l.Errorf("can't get prices from stream: %v", err)
+		t.logger.Errorf("can't get prices from stream: %v", err)
 		return
 	}
 
@@ -146,7 +159,7 @@ func (t *Ticker) makeDeals(service pb.TradingServiceClient, l logger.Logger) {
 		}
 
 		if err != nil {
-			l.Errorf("can't get price from request: %v", err)
+			t.logger.Errorf("can't get price from request: %v", err)
 			return
 		}
 

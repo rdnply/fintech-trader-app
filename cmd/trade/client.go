@@ -71,13 +71,14 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 		}
 
 		c.ws.Broadcast(c.r)
-		c.logger.Infof("Make update for robot with ids: %v(ticker: %v)", c.r.RobotID, c.ticker.name)
+		c.logger.Infof("Make update for robot with ids: %v(name: %v)", c.r.RobotID, c.ticker.name)
 		c.isBuying = true
 	}
 }
 
 func isValid(r *robot.Robot) bool {
-	if r.BuyPrice == nil || r.SellPrice == nil || r.DealsCount == nil || r.FactYield == nil {
+	if r.BuyPrice == nil || r.SellPrice == nil ||
+	   r.DealsCount == nil || r.FactYield == nil {
 		return false
 	}
 

@@ -19,7 +19,7 @@ type Trader struct {
 }
 
 type trade struct {
-	ticker string
+	name   string
 	robots []*robot.Robot
 }
 
@@ -77,8 +77,8 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 		fmt.Println("start work: ", toDelete)
 		for name, rbts := range rbtsByTicker {
 			if !t.tickers[name] {
-				t.logger.Infof("Register ticker with name: %v", name)
-				ticker := initTicker(name, rbts, t.robotStorage, t.ws, t.logger)
+				t.logger.Infof("Register name with name: %v", name)
+				ticker := initTicker(name, rbts, t.robotStorage, t.ws, t.logger, t.tradingService)
 				t.tickers[name] = true
 				t.hub.register <- ticker
 			}
@@ -87,17 +87,19 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 		}
 
 		fmt.Println("To delete: ", toDelete)
-		for k, del := range toDelete {
+		for name, del := range toDelete {
 			if del {
-				ticker := initTicker(k, nil, t.robotStorage, t.ws, t.logger)
-				delete(t.tickers, k)
-				t.hub.unregister <- ticker
+				//name := initTicker(name, nil, t.robotStorage, t.ws, t.logger)
+				t.logger.Infof("Send in hub for delete: %v", name)
+				t.hub.unregister <- name
+				delete(t.tickers, name)
 			}
 		}
 
-		for k, del := range toDelete {
+		for name, del := range toDelete {
 			if !del {
-				trade := &trade{k, rbtsByTicker[k]}
+				fmt.Println("To broadcast: ", rbtsByTicker[name])
+				trade := &trade{name, rbtsByTicker[name]}
 				t.hub.broadcast <- trade
 			}
 		}
@@ -107,19 +109,20 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 	<-done
 }
 
-func initTicker(n string, rr []*robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger) *Ticker {
+func initTicker(n string, rr []*robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger, s pb.TradingServiceClient) *Ticker {
 	t := &Ticker{
-		name:         n,
-		robots:       rr,
-		clients:      make(map[*Client]bool),
-		start:        make(chan bool),
-		stop:         make(chan bool),
-		stopDeals:    make(chan bool),
+		name:    n,
+		robots:  rr,
+		clients: make(map[*Client]bool),
+		start:   make(chan bool),
+		stop:    make(chan bool),
+		//stopDeals:    make(chan bool),
 		broadcast:    make(chan []*robot.Robot),
 		ids:          make(map[int64]*Client),
 		robotStorage: rs,
 		ws:           ws,
 		logger:       l,
+		service:      s,
 	}
 
 	return t
