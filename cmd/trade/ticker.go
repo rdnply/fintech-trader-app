@@ -15,14 +15,14 @@ type Ticker struct {
 	clients      map[*Client]bool
 	ids          map[int64]*Client
 	name         string
+	robots       []*robot.Robot
+	service      pb.TradingServiceClient
 	robotStorage robot.Storage
 	ws           *socket.Hub
-	logger       logger.Logger
-	robots       []*robot.Robot
 	start        chan bool
 	stop         chan bool
 	broadcast    chan []*robot.Robot
-	service      pb.TradingServiceClient
+	logger       logger.Logger
 }
 
 func (t *Ticker) run() {
@@ -40,7 +40,7 @@ func (t *Ticker) run() {
 			go t.makeDeals()
 
 			for _, r := range t.robots {
-				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
+				client := initClient(t.name, r, t.robotStorage, t.ws, t.logger)
 				t.ids[r.RobotID] = client
 				t.mu.Lock()
 				t.clients[client] = true
@@ -50,6 +50,7 @@ func (t *Ticker) run() {
 			}
 		case <-t.stop:
 			t.logger.Infof("Stop ticker with name: %v", t.name)
+
 			t.mu.Lock()
 			for c := range t.clients {
 				t.logger.Infof("Close client with ID: %v", c.r.RobotID)
@@ -61,7 +62,7 @@ func (t *Ticker) run() {
 
 			return
 		case robots := <-t.broadcast:
-			toWork := t.workWithRobots(robots)
+			toWork := t.work(robots)
 			for _, client := range toWork {
 				go client.work()
 			}
@@ -69,7 +70,7 @@ func (t *Ticker) run() {
 	}
 }
 
-func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
+func (t *Ticker) work(rbts []*robot.Robot) []*Client {
 	toDelete := make(map[int64]bool)
 	toWork := make([]*Client, 0)
 
@@ -83,7 +84,7 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 		for _, r := range rbts {
 			if _, ok := t.ids[r.RobotID]; !ok {
 				t.logger.Infof("Register client with id: %v", r.RobotID)
-				client := initClient(t, r, t.robotStorage, t.ws, t.logger)
+				client := initClient(t.name, r, t.robotStorage, t.ws, t.logger)
 				t.mu.Lock()
 				t.clients[client] = true
 				t.mu.Unlock()
@@ -103,6 +104,7 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 			if del {
 				t.logger.Infof("Delete client with id: %v", id)
 				t.ids[id].unregister <- true
+
 				t.mu.Lock()
 				delete(t.clients, t.ids[id])
 				delete(t.ids, id)
@@ -118,17 +120,17 @@ func (t *Ticker) workWithRobots(rbts []*robot.Robot) []*Client {
 	return toWork
 }
 
-func initClient(t *Ticker, r *robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger) *Client {
+func initClient(name string, r *robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger) *Client {
 	c := &Client{
-		ticker:       t,
 		r:            r,
-		send:         make(chan *pb.PriceResponse),
-		isBuying:     true,
-		isSelling:    false,
+		tickerName:   name,
 		robotStorage: rs,
 		ws:           ws,
-		logger:       l,
+		send:         make(chan *pb.PriceResponse),
 		unregister:   make(chan bool),
+		isBuying:     true,
+		isSelling:    false,
+		logger:       l,
 	}
 
 	return c

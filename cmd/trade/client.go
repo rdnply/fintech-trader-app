@@ -8,17 +8,17 @@ import (
 )
 
 type Client struct {
-	ticker       *Ticker
+	r            *robot.Robot
+	tickerName   string
 	robotStorage robot.Storage
 	ws           *socket.Hub
-	logger       logger.Logger
-	r            *robot.Robot
 	send         chan *pb.PriceResponse
 	unregister   chan bool
 	isBuying     bool
 	isSelling    bool
 	buyPrice     float64
 	sellPrice    float64
+	logger       logger.Logger
 }
 
 func (c *Client) work() {
@@ -32,7 +32,7 @@ func (c *Client) work() {
 	for {
 		select {
 		case lot := <-c.send:
-			c.canMakeTrade(lot)
+			c.makeTrade(lot)
 		case <-c.unregister:
 			c.logger.Infof("Stop client for robot with id: %v", c.r.RobotID)
 			return
@@ -41,7 +41,7 @@ func (c *Client) work() {
 	}
 }
 
-func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
+func (c *Client) makeTrade(resp *pb.PriceResponse) {
 	if !isValid(c.r) {
 		return
 	}
@@ -51,14 +51,14 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 		c.isBuying = false
 		c.isSelling = true
 		c.logger.Infof("Buy %v lot with price: buy price:%v, sell price: %v; border for buy: %v",
-			c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.BuyPrice.V.Float64)
+			c.tickerName, resp.BuyPrice, resp.SellPrice, c.r.BuyPrice.V.Float64)
 	}
 
 	if c.isSelling && c.r.SellPrice.V.Float64 <= resp.SellPrice {
 		c.sellPrice = resp.SellPrice
 		c.isSelling = false
 		c.logger.Infof("Sell %v lot with price: buy price:%v, sell price: %v; border for sell: %v",
-			c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.SellPrice.V.Float64)
+			c.tickerName, resp.BuyPrice, resp.SellPrice, c.r.SellPrice.V.Float64)
 	}
 
 	if !c.isSelling && !c.isBuying {

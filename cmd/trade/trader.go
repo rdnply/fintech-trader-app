@@ -9,32 +9,32 @@ import (
 )
 
 type Trader struct {
-	logger         logger.Logger
+	tickers        map[string]bool
 	tradingService pb.TradingServiceClient
 	robotStorage   robot.Storage
 	hub            *Hub
-	tickers        map[string]bool
 	ws             *socket.Hub
+	logger         logger.Logger
 }
 
-type trade struct {
+type tradeInfo struct {
 	name   string
 	robots []*robot.Robot
 }
 
 func New(l logger.Logger, tc pb.TradingServiceClient, rs robot.Storage, ws *socket.Hub) *Trader {
 	return &Trader{
-		logger:         l,
+		tickers:        make(map[string]bool),
 		tradingService: tc,
 		robotStorage:   rs,
 		hub:            NewHub(tc, l, rs),
-		tickers:        make(map[string]bool),
 		ws:             ws,
+		logger:         l,
 	}
 }
 
 func (t *Trader) StartDeals(quit chan bool) {
-	const Timeout = 5
+	const Timeout = 3
 
 	tick := time.NewTicker(time.Second * Timeout)
 
@@ -46,7 +46,7 @@ func (t *Trader) StartDeals(quit chan bool) {
 			case <-tick.C:
 				rbts, err := t.robotStorage.GetActiveRobots()
 				if err != nil {
-					t.logger.Errorf("Can't get active robots from storage: %v", err)
+					t.logger.Errorf("can't get active robots from storage: %v", err)
 				}
 
 				rbtsByTicker := getRobotsByTicker(rbts)
@@ -73,7 +73,6 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 
 		for name, rbts := range rbtsByTicker {
 			if !t.tickers[name] {
-				t.logger.Infof("Register name with name: %v", name)
 				ticker := initTicker(name, rbts, t.robotStorage, t.ws, t.logger, t.tradingService)
 				t.tickers[name] = true
 				t.hub.register <- ticker
@@ -91,10 +90,11 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 
 		for name, del := range toDelete {
 			if !del {
-				trade := &trade{name, rbtsByTicker[name]}
+				trade := &tradeInfo{name, rbtsByTicker[name]}
 				t.hub.broadcast <- trade
 			}
 		}
+
 		done <- true
 	}()
 
@@ -103,18 +103,17 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 
 func initTicker(n string, rr []*robot.Robot, rs robot.Storage, ws *socket.Hub, l logger.Logger, s pb.TradingServiceClient) *Ticker {
 	t := &Ticker{
-		name:    n,
-		robots:  rr,
-		clients: make(map[*Client]bool),
-		start:   make(chan bool),
-		stop:    make(chan bool),
-		//stopDeals:    make(chan bool),
-		broadcast:    make(chan []*robot.Robot),
+		clients:      make(map[*Client]bool),
 		ids:          make(map[int64]*Client),
+		name:         n,
+		robots:       rr,
+		service:      s,
 		robotStorage: rs,
 		ws:           ws,
+		start:        make(chan bool),
+		stop:         make(chan bool),
+		broadcast:    make(chan []*robot.Robot),
 		logger:       l,
-		service:      s,
 	}
 
 	return t

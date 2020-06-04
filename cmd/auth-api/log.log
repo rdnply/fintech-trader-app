@@ -1,45 +1,56 @@
-{"level":"info","ts":"2020-06-05T00:17:01+03:00","caller":"runtime/proc.go:203","msg":"Server is running at 5000"}
-{"level":"info","ts":"2020-06-05T00:17:01+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start running hub for tickers"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Register name with name: AMZN"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Register name with name: SBER"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Register name with name: APPL"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: AMZN"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: SBER"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Register name with name: YNDX"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 93"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 91"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 92"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: YNDX"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 94"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 95"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 96"}
-{"level":"info","ts":"2020-06-05T00:17:06+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:23, sell price: 21; border for buy: 24"}
-{"level":"info","ts":"2020-06-05T00:17:09+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:35, sell price: 33; border for sell: 33"}
-{"level":"info","ts":"2020-06-05T00:17:09+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 94(name: APPL)"}
-{"level":"info","ts":"2020-06-05T00:17:10+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:18, sell price: 17; border for buy: 18"}
-{"level":"info","ts":"2020-06-05T00:17:17+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:17, sell price: 16; border for buy: 20"}
-{"level":"info","ts":"2020-06-05T00:17:18+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:23, sell price: 21; border for buy: 24"}
-{"level":"info","ts":"2020-06-05T00:17:18+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:15, sell price: 14; border for buy: 15"}
-{"level":"info","ts":"2020-06-05T00:17:19+03:00","caller":"trade/client.go:35","msg":"Buy AMZN lot with price: buy price:21, sell price: 18; border for buy: 22"}
-{"level":"info","ts":"2020-06-05T00:17:23+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:9, sell price: 7; border for buy: 12"}
-{"level":"info","ts":"2020-06-05T00:17:29+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:20, sell price: 18; border for sell: 16"}
-{"level":"info","ts":"2020-06-05T00:17:29+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 95(name: APPL)"}
-{"level":"info","ts":"2020-06-05T00:17:33+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:20, sell price: 19; border for sell: 18"}
-{"level":"info","ts":"2020-06-05T00:17:33+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 92(name: SBER)"}
-{"level":"info","ts":"2020-06-05T00:17:34+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:15, sell price: 14; border for buy: 15"}
-{"level":"info","ts":"2020-06-05T00:17:34+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:11, sell price: 9; border for buy: 12"}
-{"level":"info","ts":"2020-06-05T00:17:39+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:19, sell price: 18; border for sell: 18"}
-{"level":"info","ts":"2020-06-05T00:17:39+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 92(name: SBER)"}
-{"level":"info","ts":"2020-06-05T00:17:39+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:13, sell price: 12; border for buy: 15"}
-{"level":"info","ts":"2020-06-05T00:17:45+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:20, sell price: 18; border for sell: 16"}
-{"level":"info","ts":"2020-06-05T00:17:45+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 95(name: APPL)"}
-{"level":"info","ts":"2020-06-05T00:17:46+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:9, sell price: 7; border for buy: 12"}
-{"level":"info","ts":"2020-06-05T00:17:53+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:18, sell price: 16; border for sell: 16"}
-{"level":"info","ts":"2020-06-05T00:17:53+03:00","caller":"trade/client.go:35","msg":"Make update for robot with ids: 95(name: APPL)"}
-{"level":"info","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
-{"level":"error","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
-{"level":"error","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
-{"level":"error","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
-{"level":"info","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Quit from trader"}
-{"level":"error","ts":"2020-06-05T00:17:54+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"info","ts":"2020-06-05T01:10:49+03:00","caller":"runtime/proc.go:203","msg":"Server is running at 5000"}
+{"level":"info","ts":"2020-06-05T01:10:49+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start running hub for tickers"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: SBER"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: AMZN"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 93"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: APPL"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start ticker with name: YNDX"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 92"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 91"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 95"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 94"}
+{"level":"info","ts":"2020-06-05T01:10:52+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Start client for robot with id: 96"}
+{"level":"info","ts":"2020-06-05T01:10:53+03:00","caller":"trade/client.go:35","msg":"Buy AMZN lot with price: buy price:22, sell price: 21; border for buy: 22"}
+{"level":"info","ts":"2020-06-05T01:10:53+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:15, sell price: 13; border for buy: 18"}
+{"level":"info","ts":"2020-06-05T01:11:00+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:17, sell price: 14; border for buy: 20"}
+{"level":"info","ts":"2020-06-05T01:11:00+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:23, sell price: 22; border for buy: 24"}
+{"level":"info","ts":"2020-06-05T01:11:00+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:13, sell price: 10; border for buy: 15"}
+{"level":"info","ts":"2020-06-05T01:11:04+03:00","caller":"trade/client.go:35","msg":"Sell YNDX lot with price: buy price:24, sell price: 22; border for sell: 22"}
+{"level":"info","ts":"2020-06-05T01:11:05+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:12, sell price: 11; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:07+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:17, sell price: 15; border for buy: 18"}
+{"level":"info","ts":"2020-06-05T01:11:08+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:21, sell price: 18; border for sell: 18"}
+{"level":"info","ts":"2020-06-05T01:11:08+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:17, sell price: 16; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:09+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:15, sell price: 12; border for buy: 15"}
+{"level":"info","ts":"2020-06-05T01:11:09+03:00","caller":"trade/client.go:35","msg":"Sell YNDX lot with price: buy price:24, sell price: 22; border for sell: 22"}
+{"level":"info","ts":"2020-06-05T01:11:10+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:21, sell price: 18; border for sell: 18"}
+{"level":"info","ts":"2020-06-05T01:11:11+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:10, sell price: 9; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:12+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:14, sell price: 11; border for buy: 15"}
+{"level":"info","ts":"2020-06-05T01:11:13+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:18, sell price: 16; border for buy: 18"}
+{"level":"info","ts":"2020-06-05T01:11:19+03:00","caller":"trade/client.go:35","msg":"Sell YNDX lot with price: buy price:24, sell price: 22; border for sell: 22"}
+{"level":"info","ts":"2020-06-05T01:11:19+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:17, sell price: 15; border for buy: 18"}
+{"level":"info","ts":"2020-06-05T01:11:24+03:00","caller":"trade/client.go:35","msg":"Sell YNDX lot with price: buy price:24, sell price: 22; border for sell: 22"}
+{"level":"info","ts":"2020-06-05T01:11:25+03:00","caller":"trade/client.go:35","msg":"Sell AMZN lot with price: buy price:31, sell price: 30; border for sell: 30"}
+{"level":"info","ts":"2020-06-05T01:11:26+03:00","caller":"trade/client.go:35","msg":"Buy AMZN lot with price: buy price:19, sell price: 18; border for buy: 22"}
+{"level":"info","ts":"2020-06-05T01:11:30+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:18, sell price: 17; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:31+03:00","caller":"trade/client.go:35","msg":"Buy YNDX lot with price: buy price:18, sell price: 16; border for buy: 18"}
+{"level":"info","ts":"2020-06-05T01:11:31+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:9, sell price: 8; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:39+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:23, sell price: 20; border for sell: 18"}
+{"level":"info","ts":"2020-06-05T01:11:41+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:18, sell price: 17; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:41+03:00","caller":"trade/client.go:35","msg":"Sell SBER lot with price: buy price:28, sell price: 25; border for sell: 24"}
+{"level":"info","ts":"2020-06-05T01:11:44+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:12, sell price: 11; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:45+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:18, sell price: 15; border for buy: 20"}
+{"level":"info","ts":"2020-06-05T01:11:45+03:00","caller":"trade/client.go:35","msg":"Buy SBER lot with price: buy price:13, sell price: 10; border for buy: 15"}
+{"level":"info","ts":"2020-06-05T01:11:48+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:17, sell price: 16; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:50+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:12, sell price: 11; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:51+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:20, sell price: 19; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:53+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:12, sell price: 11; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:11:56+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:17, sell price: 16; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:11:59+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:11, sell price: 10; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:12:01+03:00","caller":"trade/client.go:35","msg":"Sell APPL lot with price: buy price:18, sell price: 17; border for sell: 16"}
+{"level":"info","ts":"2020-06-05T01:12:02+03:00","caller":"trade/client.go:35","msg":"Buy APPL lot with price: buy price:12, sell price: 11; border for buy: 12"}
+{"level":"info","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Shutting down server with 5s timeout"}
+{"level":"error","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"error","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}
+{"level":"info","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"Quit from trader"}
+{"level":"error","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Unavailable desc = transport is closing"}
+{"level":"error","ts":"2020-06-05T01:12:08+03:00","caller":"runtime/asm_amd64.s:1357","msg":"can't get price from request: rpc error: code = Canceled desc = grpc: the client connection is closing"}

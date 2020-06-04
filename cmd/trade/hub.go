@@ -7,31 +7,37 @@ import (
 )
 
 type Hub struct {
-	service      pb.TradingServiceClient
 	tickers      map[*Ticker]bool
+	names        map[string]*Ticker
+	service      pb.TradingServiceClient
+	robotStorage robot.Storage
 	register     chan *Ticker
 	unregister   chan string
-	broadcast    chan *trade
+	broadcast    chan *tradeInfo
 	logger       logger.Logger
-	names        map[string]*Ticker
-	robotStorage robot.Storage
 }
 
 func NewHub(s pb.TradingServiceClient, l logger.Logger, rs robot.Storage) *Hub {
 	return &Hub{
-		service:      s,
 		tickers:      make(map[*Ticker]bool),
-		broadcast:    make(chan *trade),
+		names:        make(map[string]*Ticker),
+		service:      s,
+		robotStorage: rs,
 		register:     make(chan *Ticker),
 		unregister:   make(chan string),
-		names:        make(map[string]*Ticker),
+		broadcast:    make(chan *tradeInfo),
 		logger:       l,
-		robotStorage: rs,
 	}
 }
 
 func (h *Hub) Run() {
 	h.logger.Infof("Start running hub for tickers")
+
+	defer func() {
+		close(h.register)
+		close(h.unregister)
+		close(h.broadcast)
+	}()
 
 	for {
 		select {
