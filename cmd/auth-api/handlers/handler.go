@@ -7,10 +7,12 @@ import (
 	"cw1/internal/session"
 	"cw1/internal/user"
 	"cw1/pkg/log/logger"
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 	"html/template"
 	"net/http"
+	"os"
 )
 
 type Handler struct {
@@ -52,9 +54,15 @@ func parseTemplates() (map[string]*template.Template, error) {
 
 	var err error
 
-	tmplts["index"], err = template.New("index").Funcs(funcMap).ParseFiles(
-		"C:\\Users\\rodion\\go\\src\\cw1\\internal\\templates\\base.html",
-		"C:\\Users\\rodion\\go\\src\\cw1\\internal\\templates\\index.html")
+	_ = os.Chdir("./internal/templates")
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, errors.Wrapf(err, "can't get path")
+	}
+
+	fmt.Println(pwd)
+	tmplts["index"], err = template.New("index").Funcs(funcMap).
+		ParseFiles(fmt.Sprintf("%s/base.html", pwd), fmt.Sprintf("%s/index.html", pwd))
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't parse index html template")
 	}

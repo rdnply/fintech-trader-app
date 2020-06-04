@@ -8,6 +8,7 @@ import (
 	"cw1/internal/postgres"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -87,35 +88,41 @@ type storages struct {
 func initStorages(logger logger.Logger) (*storages, map[string]io.Closer) {
 	closers := make(map[string]io.Closer)
 
-	db, err := postgres.New(logger, "C:\\Users\\rodion\\go\\src\\cw1\\configuration.json")
+	_ = os.Chdir("../..")
+	pwd, err := os.Getwd()
 	if err != nil {
-		logger.Fatalf("Can't create database instance %v", err)
+		logger.Fatalf("can't get path: %v", err)
+	}
+
+	db, err := postgres.New(logger, fmt.Sprintf("%s/configuration.json", pwd))
+	if err != nil {
+		logger.Fatalf("can't create database instance %v", err)
 	}
 
 	closers["db"] = db
 
 	err = db.CheckConnection()
 	if err != nil {
-		logger.Fatalf("Can't connect to database %v", err)
+		logger.Fatalf("can't connect to database %v", err)
 	}
 
 	userStorage, err := postgres.NewUserStorage(db)
 	if err != nil {
-		logger.Fatalf("Can't create user storage: %s", err)
+		logger.Fatalf("can't create user storage: %s", err)
 	}
 
 	closers["user_storage"] = userStorage
 
 	sessionStorage, err := postgres.NewSessionStorage(db)
 	if err != nil {
-		logger.Fatalf("Can't create session storage: %s", err)
+		logger.Fatalf("can't create session storage: %s", err)
 	}
 
 	closers["session_storage"] = sessionStorage
 
 	robotStorage, err := postgres.NewRobotStorage(db)
 	if err != nil {
-		logger.Fatalf("Can't create robot storage: %s", err)
+		logger.Fatalf("can't create robot storage: %s", err)
 	}
 
 	closers["robot_storage"] = robotStorage
@@ -157,7 +164,7 @@ func gracefulShutdown(srv *http.Server, timeout time.Duration, logger logger.Log
 	logger.Infof("Shutting down server with %s timeout", timeout)
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatalf("Could not shutdown server:%v", err)
+		logger.Fatalf("could not shutdown server:%v", err)
 	}
 }
 
