@@ -132,8 +132,7 @@ func (s *RobotStorage) Update(r *robot.Robot) error {
 }
 
 const getActiveRobotsQuery = "SELECT robot_id, " + robotFields + " FROM robots " +
-	"WHERE is_active=true AND ((plan_start at time zone 'utc')::time <= (localtime at time zone 'utc')  AND " +
-	"(localtime at time zone 'utc') <= (plan_end at time zone 'utc')::time)"
+	"WHERE is_active=true AND ((plan_start at time zone 'utc')::time <= localtime  AND localtime <= (plan_end at time zone 'utc')::time)"
 
 func (s *RobotStorage) GetActiveRobots() ([]*robot.Robot, error) {
 	return find(s.getActiveRobotsStmt)

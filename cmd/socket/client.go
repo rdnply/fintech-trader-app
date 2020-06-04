@@ -1,9 +1,8 @@
 package socket
 
 import (
-	"cw1/cmd/auth-api/httperror"
+	"cw1/cmd/auth-api/render"
 	"cw1/internal/robot"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -56,7 +55,7 @@ func (c *Client) writePump() {
 	}
 }
 
-func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
+func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  readBufSize,
 		WriteBufferSize: writeBufSize,
@@ -64,14 +63,12 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) error {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't open socket connection\n")
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		render.HTTPError("can't open websocket connection", http.StatusInternalServerError, w)
+		return
 	}
 
 	client := &Client{hub: hub, conn: conn, send: make(chan *robot.Robot)}
 	client.hub.register <- client
 
 	go client.writePump()
-
-	return nil
 }

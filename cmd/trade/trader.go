@@ -2,7 +2,6 @@ package trade
 
 import (
 	"cw1/cmd/socket"
-	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -24,7 +23,7 @@ type trade struct {
 	robots []*robot.Robot
 }
 
-func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage, ws *socket.Hub) *Trader {
+func New(l logger.Logger, tc pb.TradingServiceClient, rs robot.Storage, ws *socket.Hub) *Trader {
 	return &Trader{
 		logger:         l,
 		tradingService: tc,
@@ -38,27 +37,26 @@ func New(l logger.Logger, tc pb.TradingServiceClient, rs *postgres.RobotStorage,
 func (t *Trader) StartDeals(quit chan bool) {
 	const Timeout = 3
 
-	ticker := time.NewTicker(time.Second * Timeout)
-
-	//t.logger.Infof("Start making deals")
+	tick := time.NewTicker(time.Second * Timeout)
 
 	go t.hub.Run()
 
 	go func() {
 		for {
 			select {
-			case <-ticker.C:
+			case <-tick.C:
 				rbts, err := t.robotStorage.GetActiveRobots()
-				fmt.Println(rbts)
+				fmt.Println("Robots: ", rbts)
 				if err != nil {
 					t.logger.Errorf("Can't get active robots from storage: %v", err)
 				}
 
 				rbtsByTicker := getRobotsByTicker(rbts)
+				fmt.Println("Map: ", rbtsByTicker)
 				t.work(rbtsByTicker)
 			case <-quit:
 				t.logger.Infof("Quit from trader")
-				ticker.Stop()
+				tick.Stop()
 
 				return
 			}
@@ -76,18 +74,23 @@ func (t *Trader) work(rbtsByTicker map[string][]*robot.Robot) {
 			toDelete[k] = true
 		}
 
-		for k, v := range rbtsByTicker {
-			if !t.tickers[k] {
-				ticker := initTicker(k, v, t.robotStorage, t.ws, t.logger)
+		fmt.Println("start work: ", toDelete)
+		for name, rbts := range rbtsByTicker {
+			if !t.tickers[name] {
+				t.logger.Infof("Register ticker with name: %v", name)
+				ticker := initTicker(name, rbts, t.robotStorage, t.ws, t.logger)
+				t.tickers[name] = true
 				t.hub.register <- ticker
 			}
 
-			toDelete[k] = false
+			toDelete[name] = false
 		}
 
+		fmt.Println("To delete: ", toDelete)
 		for k, del := range toDelete {
 			if del {
 				ticker := initTicker(k, nil, t.robotStorage, t.ws, t.logger)
+				delete(t.tickers, k)
 				t.hub.unregister <- ticker
 			}
 		}
@@ -109,11 +112,11 @@ func initTicker(n string, rr []*robot.Robot, rs robot.Storage, ws *socket.Hub, l
 		name:         n,
 		robots:       rr,
 		clients:      make(map[*Client]bool),
-		start:        make(chan []*robot.Robot),
+		start:        make(chan bool),
 		stop:         make(chan bool),
 		stopDeals:    make(chan bool),
 		broadcast:    make(chan []*robot.Robot),
-		id:           make(map[int64]*Client),
+		ids:          make(map[int64]*Client),
 		robotStorage: rs,
 		ws:           ws,
 		logger:       l,

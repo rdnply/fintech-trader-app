@@ -1,18 +1,15 @@
 package handler
 
 import (
-	"cw1/cmd/auth-api/httperror"
 	"cw1/cmd/socket"
 	"cw1/internal/format"
 	"cw1/internal/robot"
 	"cw1/internal/session"
 	"cw1/internal/user"
 	"cw1/pkg/log/logger"
-	"html/template"
-	"net/http"
-
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
+	"html/template"
 )
 
 type Handler struct {
@@ -67,73 +64,85 @@ func parseTemplates() (map[string]*template.Template, error) {
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/signup", rootHandler{h.signUp, h.logger}.ServeHTTP)
-		r.Post("/signin", rootHandler{h.signIn, h.logger}.ServeHTTP)
-		r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
-		r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
-		r.Get("/users/{id}/robots", rootHandler{h.getUserRobots, h.logger}.ServeHTTP)
-
-		r.Post("/robot", rootHandler{h.createRobot, h.logger}.ServeHTTP)
-		r.Delete("/robot/{id}", rootHandler{h.deleteRobot, h.logger}.ServeHTTP)
-		r.Get("/robots", rootHandler{h.getRobots, h.logger}.ServeHTTP)
-		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP) //nolint: misspell
-		r.Put("/robot/{id}/activate", rootHandler{h.activate, h.logger}.ServeHTTP)
-		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
-		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
-		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
+		r.Post("/signup", h.signUp)
+		r.Post("/signin", h.signIn)
+		r.Put("/users/{id}", h.updateUser)
+		r.Get("/users/{id}", h.getUser)
+		r.Get("/users/{id}/robots", h.getUserRobots)
 	})
-	r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
-		return socket.ServeWS(h.hub, w, r)
-	}, h.logger}.ServeHTTP)
-
 	return r
 }
 
-type rootHandler struct {
-	H      func(http.ResponseWriter, *http.Request) error
-	logger logger.Logger
-}
+//func (h *Handler) Routes() chi.Router {
+//	r := chi.NewRouter()
+//	r.Route("/api/v1", func(r chi.Router) {
+//		r.Post("/signup", rootHandler{h.signUp, h.logger}.ServeHTTP)
+//		r.Post("/signin", rootHandler{h.signIn, h.logger}.ServeHTTP)
+//		r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
+//		r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
+//		r.Get("/users/{id}/robots", rootHandler{h.getUserRobots, h.logger}.ServeHTTP)
+//
+//		r.Post("/robot", rootHandler{h.createRobot, h.logger}.ServeHTTP)
+//		r.Delete("/robot/{id}", rootHandler{h.deleteRobot, h.logger}.ServeHTTP)
+//		r.Get("/robots", rootHandler{h.getRobots, h.logger}.ServeHTTP)
+//		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP)
+//		r.Put("/robot/{id}/activate", rootHandler{h.activate, h.logger}.ServeHTTP)
+//		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
+//		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
+//		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
+//	})
+//	r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
+//		return socket.ServeWS(h.hub, w, r)
+//	}, h.logger}.ServeHTTP)
+//
+//	return r
+//}
 
-func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	err := fn.H(w, r)
-	if err == nil {
-		return
-	}
-
-	clientError, ok := err.(httperror.ClientError)
-	if !ok {
-		fn.logger.Errorf("Can't cast error to Client's error: %v", clientError)
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
-	}
-
-	fn.logger.Errorf(clientError.Error())
-
-	body, err := clientError.ResponseBody()
-	if err != nil {
-		fn.logger.Errorf("Can't get info about error because of : %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
-	}
-
-	status, headers := clientError.ResponseHeaders()
-	for k, v := range headers {
-		if body == nil && v == "application/json" {
-			continue
-		}
-
-		w.Header().Set(k, v)
-	}
-
-	w.WriteHeader(status)
-
-	c, err := w.Write(body)
-	if err != nil {
-		fn.logger.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
-		w.WriteHeader(http.StatusInternalServerError)
-
-		return
-	}
-}
+//type rootHandler struct {
+//	H      func(http.ResponseWriter, *http.Request) error
+//	logger logger.Logger
+//}
+//
+//func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	err := fn.H(w, r)
+//	if err == nil {
+//		return
+//	}
+//
+//	clientError, ok := err.(render.ClientError)
+//	if !ok {
+//		fn.logger.Errorf("Can't cast error to Client's error: %v", clientError)
+//		w.WriteHeader(http.StatusInternalServerError)
+//
+//		return
+//	}
+//
+//	fn.logger.Errorf(clientError.Error())
+//
+//	body, err := clientError.ResponseBody()
+//	if err != nil {
+//		fn.logger.Errorf("Can't get info about error because of : %v", err)
+//		w.WriteHeader(http.StatusInternalServerError)
+//
+//		return
+//	}
+//
+//	status, headers := clientError.ResponseHeaders()
+//	for k, v := range headers {
+//		if body == nil && v == "application/json" {
+//			continue
+//		}
+//
+//		w.Header().Set(k, v)
+//	}
+//
+//	w.WriteHeader(status)
+//
+//	c, err := w.Write(body)
+//	if err != nil {
+//		fn.logger.Errorf("Can't write json data in respond, code: %v, error: %v", c, err)
+//		w.WriteHeader(http.StatusInternalServerError)
+//
+//		return
+//	}
+//}

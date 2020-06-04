@@ -9,11 +9,12 @@ import (
 
 type Client struct {
 	ticker       *Ticker
-	r            *robot.Robot
-	send         chan *pb.PriceResponse
 	robotStorage robot.Storage
 	ws           *socket.Hub
 	logger       logger.Logger
+	r            *robot.Robot
+	send         chan *pb.PriceResponse
+	unregister   chan bool
 	isBuying     bool
 	isSelling    bool
 	buyPrice     float64
@@ -23,12 +24,20 @@ type Client struct {
 func (c *Client) work() {
 	defer func() {
 		close(c.send)
+		close(c.unregister)
 	}()
 
-	//c.logger.Infof("Start client with id: %v", c.r.RobotID)
+	c.logger.Infof("Start client for robot with ids: %v", c.r.RobotID)
 
-	for lot := range c.send {
-		c.canMakeTrade(lot)
+	for {
+		select {
+		case lot := <-c.send:
+			c.canMakeTrade(lot)
+		case <-c.unregister:
+			c.logger.Infof("Stop client for robot with ids: %v", c.r.RobotID)
+			return
+		}
+
 	}
 }
 
@@ -41,13 +50,13 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 		c.buyPrice = resp.BuyPrice
 		c.isBuying = false
 		c.isSelling = true
-		c.logger.Infof("Buy lot: %v", resp)
+		c.logger.Infof("Buy %v lot with price: buy price:%v, sell price: %v; border for buy: %v", c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.BuyPrice.V.Float64)
 	}
 
 	if c.isSelling && c.r.SellPrice.V.Float64 <= resp.SellPrice {
 		c.sellPrice = resp.SellPrice
 		c.isSelling = false
-		c.logger.Infof("Sell lot: %v", resp)
+		c.logger.Infof("Sell %v lot with price: buy price:%v, sell price: %v; border for sell: %v", c.ticker.name, resp.BuyPrice, resp.SellPrice, c.r.SellPrice.V.Float64)
 	}
 
 	if !c.isSelling && !c.isBuying {
@@ -56,11 +65,11 @@ func (c *Client) canMakeTrade(resp *pb.PriceResponse) {
 
 		err := c.robotStorage.Update(c.r)
 		if err != nil {
-			c.logger.Errorf("Can't update robot with id: %v", c.r.RobotID)
+			c.logger.Errorf("Can't update robot with ids: %v", c.r.RobotID)
 		}
 
 		c.ws.Broadcast(c.r)
-		c.logger.Infof("Make update for robot with id: %v", c.r.RobotID)
+		c.logger.Infof("Make update for robot with ids: %v(ticker: %v)", c.r.RobotID, c.ticker.name)
 		c.isBuying = true
 	}
 }

@@ -152,8 +152,8 @@ type NullTime struct {
 	V sql.NullTime
 }
 
-func NewNullTime() *NullTime {
-	return &NullTime{V: sql.NullTime{Time: time.Now(), Valid: true}}
+func NewNullTime() (*NullTime, error) {
+	return &NullTime{V: sql.NullTime{Time: time.Now().UTC(), Valid: true}}, nil
 }
 
 const layout = "2006-01-02T15:04:05Z"
@@ -167,7 +167,15 @@ func (nt *NullTime) Scan(value interface{}) error {
 	if reflect.TypeOf(value) == nil {
 		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: false}}
 	} else {
-		*nt = NullTime{V: sql.NullTime{Time: t.Time, Valid: true}}
+		t := t.Time.UTC()
+		s := t.Format(time.RFC3339)
+		t, err := time.Parse(layout, s)
+		if err != nil {
+			nt.V.Valid = false
+			return err
+		}
+
+		*nt = NullTime{V: sql.NullTime{Time: t, Valid: true}}
 	}
 
 	return nil
@@ -178,7 +186,14 @@ func (nt NullTime) Value() (driver.Value, error) {
 		return nil, nil
 	}
 
-	return nt.V.Time, nil
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return nil, err
+	}
+
+	nt.V.Valid = true
+
+	return nt.V.Time.In(loc), nil
 }
 
 func (nt *NullTime) MarshalJSON() ([]byte, error) {
@@ -188,11 +203,14 @@ func (nt *NullTime) MarshalJSON() ([]byte, error) {
 
 	t := nt.V.Time.UTC()
 	s := t.Format(time.RFC3339)
+
 	t, err := time.Parse(layout, s)
 	if err != nil {
 		nt.V.Valid = false
+
 		return nil, err
 	}
+
 	s = fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", t.Year(), t.Month(), t.Day(),
 		t.Hour(), t.Minute(), t.Second())
 

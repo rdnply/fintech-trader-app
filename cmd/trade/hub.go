@@ -1,7 +1,6 @@
 package trade
 
 import (
-	"cw1/internal/postgres"
 	"cw1/internal/robot"
 	pb "cw1/internal/streamer"
 	"cw1/pkg/log/logger"
@@ -18,7 +17,7 @@ type Hub struct {
 	robotStorage robot.Storage
 }
 
-func NewHub(s pb.TradingServiceClient, l logger.Logger, rs *postgres.RobotStorage) *Hub {
+func NewHub(s pb.TradingServiceClient, l logger.Logger, rs robot.Storage) *Hub {
 	return &Hub{
 		service:      s,
 		tickers:      make(map[*Ticker]bool),
@@ -38,11 +37,13 @@ func (h *Hub) Run() {
 		case ticker := <-h.register:
 			go ticker.run()
 			go ticker.makeDeals(h.service, h.logger)
-			ticker.start <- ticker.robots
+			ticker.start <- true
 
 			h.tickers[ticker] = true
 
 		case ticker := <-h.unregister:
+			h.logger.Infof("Remove ticker with name: %v", ticker.name)
+
 			if _, ok := h.tickers[ticker]; ok {
 				ticker.stop <- true
 				delete(h.tickers, ticker)

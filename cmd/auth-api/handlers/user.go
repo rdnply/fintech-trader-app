@@ -2,7 +2,7 @@ package handler
 
 import (
 	"crypto/sha256"
-	"cw1/cmd/auth-api/httperror"
+	"cw1/cmd/auth-api/render"
 	"cw1/internal/format"
 	"cw1/internal/robot"
 	"cw1/internal/session"
@@ -10,53 +10,57 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"io"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const BottomLineValidID = 0
 
-func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		return httperror.NewHTTPError("Can't unmarshal input json for sign up", err, "", http.StatusBadRequest)
+		h.logger.Errorf("can't unmarshal input json for sign up: %v", err)
+		render.HTTPError("", http.StatusBadRequest, w)
+		return
 	}
 
 	u.Password, err = generateHash(u.Password)
 	if err != nil {
-		return httperror.NewHTTPError("Can't generate hash for password", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't generate hash for password: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find user with id: %v", u.ID)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't find user with id: %v: %v", u.ID, err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	if fromDB.ID == BottomLineValidID {
 		err = h.userStorage.Create(&u)
 		if err != nil {
-			ctx := fmt.Sprintf("Can't create user record in storage with id: %v", u.ID)
-			return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+			h.logger.Errorf("can't create user record in storage with id: %v: %v", u.ID, err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
 	} else {
-		s := fmt.Sprintf("user %s is already registered", u.Email)
-		return httperror.NewHTTPError("This user already exist, email: "+u.Email, nil, s, http.StatusConflict)
+		h.logger.Errorf("user with email: %v is already exist", u.Email)
+		msg := fmt.Sprintf("user %s is already registered", u.Email)
+		render.HTTPError(msg, http.StatusConflict, w)
+		return
 	}
-
-	return nil
 }
 
 func generateHash(pwd string) (string, error) {
@@ -68,46 +72,56 @@ func generateHash(pwd string) (string, error) {
 	return string(hash), nil
 }
 
-func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		return httperror.NewHTTPError("Can't unmarshal input json for sign in", err, "", http.StatusBadRequest)
+		h.logger.Errorf("can't unmarshal input json for sign in: %v", err)
+		render.HTTPError("", http.StatusBadRequest, w)
+		return
 	}
 
 	fromDB, err := h.userStorage.FindByEmail(u.Email)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find user by id: %v", u.ID)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't find user by id: %v: %v", u.ID, err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	if !isMatch(fromDB.Password, u.Password) || fromDB.Email != u.Email {
-		ctx := fmt.Sprintf("Can't authorize because password or email: %v incorrect", u.Email)
-		return httperror.NewHTTPError(ctx, err, "incorrect email or password", http.StatusBadRequest)
+		h.logger.Errorf("can't authorize because password or email: %v incorrect: %v", u.Email, err)
+		render.HTTPError("incorrect email or password", http.StatusBadRequest, w)
+		return
 	}
 
 	token, err := generateToken(u.Email + u.Password)
 	if err != nil {
-		return httperror.NewHTTPError("Can't create new token", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't create new token: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	s, err := session.New(token, fromDB.ID)
 	if err != nil {
-		return httperror.NewHTTPError("Can't create struct for session", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't create struct for session: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	err = h.sessionStorage.Create(s)
 	if err != nil {
-		return httperror.NewHTTPError("Can't create session in storage", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't create session in storage: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	err = respondJSON(w, map[string]string{"bearer": token})
 	if err != nil {
-		return err
+		h.logger.Errorf("can't respond json with token: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
-
-	return nil
 }
 
 func generateToken(s string) (string, error) {
@@ -134,80 +148,97 @@ func isMatch(hashedPwd string, plainPwd string) bool {
 	return err == nil
 }
 
-func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	var u user.User
 
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		return httperror.NewHTTPError("Can't unmarshal input json for update user", err, "", http.StatusBadRequest)
+		h.logger.Errorf("can't unmarshal input json for updating user: %v", err)
+		render.HTTPError("", http.StatusBadRequest, w)
+		return
 	}
 
 	id, err := IDFromParams(r)
 	if err != nil {
-		return httperror.NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't get ID from URL params: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
-	err = checkIDCorrectness(id)
-	if err != nil {
-		return nil
+	if id <= BottomLineValidID {
+		h.logger.Errorf("don't valid id: %v", id)
+		msg := fmt.Sprintf("incorrect id: %v", id)
+		render.HTTPError(msg, http.StatusBadRequest, w)
+		return
 	}
 
 	token := tokenFromReq(r)
 
 	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find session by user ID: %v", id)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't find session by user ID: %v: %v", id, err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	if token == s.SessionID {
-		err = checkEmail(h.userStorage, u.Email, id)
+		msg, status, err := checkEmail(h.userStorage, u.Email, id)
 		if err != nil {
-			return err
+			h.logger.Errorf("can't init user: %v", id, err)
+			render.HTTPError(msg, status, w)
+			return
 		}
 
 		err = initUser(&u, id)
 		if err != nil {
-			return httperror.NewHTTPError("Can't init user", err, "", http.StatusInternalServerError)
+			h.logger.Errorf("can't init user: %v", id, err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 
 		err = h.userStorage.Update(&u)
 		if err != nil {
-			ctx := fmt.Sprintf("Can't update user with id= %v", id)
-			return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+			h.logger.Errorf("can't update user with id= %v: %v", id, err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 
-		err = respondJSON(w, u)
+		err = respondJSON(w, &u)
 		if err != nil {
-			return nil
+			h.logger.Errorf("can't respond json with user info: %v", err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 	} else {
-		s := fmt.Sprintf("user %s is already registered", u.Email)
-		return httperror.NewHTTPError("Don't contain same token in storage", nil, s, http.StatusNotFound)
+		h.logger.Errorf("can't respond json with user info: %v", err)
+		msg := fmt.Sprintf("user %d don't find", id)
+		render.HTTPError(msg, http.StatusNotFound, w)
 	}
-
-	return nil
 }
 
-func checkEmail(userStorage user.Storage, email string, id int64) error {
+func checkEmail(userStorage user.Storage, email string, id int64) (string, int, error) {
 	fromDB, err := userStorage.FindByEmail(email)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find user with email: %v", email)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		info := fmt.Sprintf("can't find user with email: %v", email)
+		return "", http.StatusInternalServerError, errors.Wrapf(err, info)
 	}
 
 	if fromDB.ID != BottomLineValidID && fromDB.ID != id {
-		ctx := fmt.Sprintf("New user's email: %v, is already exist", email)
-		s := fmt.Sprintf("user %s is already registered", email)
+		info := fmt.Sprintf("new user's email: %v, is already exist", email)
+		msg := fmt.Sprintf("user %s is already registered", email)
 
-		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
+		return msg, http.StatusBadRequest, errors.New(info)
 	}
 
-	return nil
+	return "", -1, nil
 }
 
 func initUser(u *user.User, id int64) error {
-	t := format.NewNullTime()
+	t, err := format.NewNullTime()
+	if err != nil {
+		return errors.Wrap(err, "can't create new null time")
+	}
+
 	u.ID = id
 	u.UpdatedAt = *t
 
@@ -222,9 +253,10 @@ func initUser(u *user.User, id int64) error {
 }
 
 func IDFromParams(r *http.Request) (int64, error) {
-	str := chi.URLParam(r, "id")
-
-	id, err := strconv.ParseInt(str, 10, 64)
+	const IDIndex = 2 // space in first place
+	str := r.URL.String()
+	params := strings.Split(str, "/")
+	id, err := strconv.ParseInt(params[IDIndex], 10, 64)
 	if err != nil {
 		return -1, errors.Wrap(err, "can't parse string to int for get id from params")
 	}
@@ -241,34 +273,28 @@ func tokenFromReq(r *http.Request) string {
 	return s[TokenID]
 }
 
-func checkIDCorrectness(id int64) error {
-	if id <= BottomLineValidID {
-		ctx := fmt.Sprintf("Don't valid ID: %v", id)
-		s := fmt.Sprintf("incorrect id: %v", id)
-
-		return httperror.NewHTTPError(ctx, nil, s, http.StatusBadRequest)
-	}
-
-	return nil
-}
-
-func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	id, err := IDFromParams(r)
 	if err != nil {
-		return httperror.NewHTTPError("Can't get ID from URL params", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't get ID from URL params: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
-	err = checkIDCorrectness(id)
-	if err != nil {
-		return err
+	if id <= BottomLineValidID {
+		h.logger.Errorf("don't valid id: %v", id)
+		msg := fmt.Sprintf("incorrect id: %v", id)
+		render.HTTPError(msg, http.StatusBadRequest, w)
+		return
 	}
 
 	tokenFromReq := tokenFromReq(r)
 
 	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't find session by user's ID: %v", id)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't find session by user's ID: %v: %v", id, err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	if tokenFromReq == s.SessionID {
@@ -276,69 +302,82 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) error {
 
 		u, err = h.userStorage.FindByID(id)
 		if err != nil {
-			ctx := fmt.Sprintf("Can't find user in storage by ID: %v", id)
-			return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+			h.logger.Errorf("can't find user in storage by ID: %v: %v", id, err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 
 		err = respondJSON(w, u)
 		if err != nil {
-			return nil
+			h.logger.Errorf("can't respond json with user info: %v", err)
+			render.HTTPError("", http.StatusInternalServerError, w)
+			return
 		}
 	} else {
-		s := fmt.Sprintf("user %v is already registered", id)
-		return httperror.NewHTTPError("Don't contain same token in storage", err, s, http.StatusNotFound)
+		h.logger.Errorf("don't contains same token in storage: %v")
+		msg := fmt.Sprintf("don't find user with ID %v", id)
+		render.HTTPError(msg, http.StatusNotFound, w)
+		return
 	}
-
-	return nil
 }
 
-func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) {
 	id, err := IDFromParams(r)
 	if err != nil {
-		return httperror.NewHTTPError("Can't get ID from URL params", err, "", http.StatusBadRequest)
+		h.logger.Errorf("can't get ID from URL params: %v", err)
+		render.HTTPError("", http.StatusBadRequest, w)
+		return
 	}
 
-	err = checkIDCorrectness(id)
-	if err != nil {
-		return err
+	if id <= BottomLineValidID {
+		h.logger.Errorf("don't valid id: %v", id)
+		msg := fmt.Sprintf("incorrect id: %v", id)
+		render.HTTPError(msg, http.StatusBadRequest, w)
+		return
 	}
 
 	token := tokenFromReq(r)
 
 	s, err := h.sessionStorage.FindByID(id)
 	if err != nil {
-		return httperror.NewHTTPError("Can't find user by id in storage", err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't find user by id in storage: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	if s.UserID == BottomLineValidID {
-		ctx := fmt.Sprintf("Can't find user with id: %v", id)
-		s := fmt.Sprintf("can't find user with id: %v", id)
-
-		return httperror.NewHTTPError(ctx, nil, s, http.StatusNotFound)
+		h.logger.Errorf("can't find user with id: %v: %v", id, err)
+		msg := fmt.Sprintf("can't find user with id: %v", id)
+		render.HTTPError(msg, http.StatusNotFound, w)
+		return
 	}
 
 	if token != s.SessionID {
-		return httperror.NewHTTPError("Tokens don't match", nil, "incorrect token", http.StatusBadRequest)
+		h.logger.Errorf("incorrect token", )
+		msg := fmt.Sprintf("tokens don't match")
+		render.HTTPError(msg, http.StatusBadRequest, w)
+		return
 	}
 
 	robots, err := h.robotStorage.FindByOwnerID(id)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't get robots with owner id: %v from storage", id)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		h.logger.Errorf("can't get robots with owner id: %v from storage: %v", id, err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
 
 	err = respondWithData(w, r, h.tmplts, robots...)
 	if err != nil {
-		return err
+		h.logger.Errorf("can't respond with data: %v", err)
+		render.HTTPError("", http.StatusInternalServerError, w)
+		return
 	}
-
-	return nil
 }
 
 func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*template.Template, rbts ...*robot.Robot) error {
-	t := r.Header.Get("Accept")
+	v := r.Header.Get("Accept")
 
-	switch t {
+	switch v {
 	case "application/json":
 		return respondJSON(w, rbts)
 	case "text/html":
@@ -348,21 +387,21 @@ func respondWithData(w http.ResponseWriter, r *http.Request, tmplts map[string]*
 
 		return renderTemplate(w, "index", "base", tmplts, rbts)
 	default:
-		return httperror.NewHTTPError("Info's type is absent", nil, "", http.StatusBadRequest)
+		return errors.New("info's type is absent")
 	}
 }
 
 func renderTemplate(w io.Writer, name string, template string, tmplts map[string]*template.Template, payload interface{}) error {
 	tmpl, ok := tmplts[name]
 	if !ok {
-		ctx := fmt.Sprintf("Can't find template with name: %v", name)
-		return httperror.NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+		info := fmt.Sprintf("can't find template with name: %v", name)
+		return errors.New(info)
 	}
 
 	err := tmpl.ExecuteTemplate(w, template, payload)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't execute template with name: %v", name)
-		return httperror.NewHTTPError(ctx, nil, "", http.StatusInternalServerError)
+		info := fmt.Sprintf("can't execute template with name: %v", name)
+		return errors.New(info)
 	}
 
 	return nil
@@ -371,7 +410,7 @@ func renderTemplate(w io.Writer, name string, template string, tmplts map[string
 func respondJSON(w http.ResponseWriter, payload interface{}) error {
 	response, err := json.Marshal(payload)
 	if err != nil {
-		return httperror.NewHTTPError("Can't marshal respond to json", err, "", http.StatusInternalServerError)
+		return errors.Wrapf(err, "can't marshal respond to json")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -379,8 +418,8 @@ func respondJSON(w http.ResponseWriter, payload interface{}) error {
 
 	c, err := w.Write(response)
 	if err != nil {
-		ctx := fmt.Sprintf("Can't write json data in respond, code: %v", c)
-		return httperror.NewHTTPError(ctx, err, "", http.StatusInternalServerError)
+		msg := fmt.Sprintf("can't write json data in respond, code: %v", c)
+		return errors.Wrapf(err, msg)
 	}
 
 	return nil
