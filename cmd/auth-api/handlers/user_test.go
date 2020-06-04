@@ -39,20 +39,23 @@ func (m mockUserStorage) Update(u *user.User) error {
 }
 
 type mockRobotStorage struct {
-	r []*robot.Robot
+	rr []*robot.Robot
 	robot.Storage
 }
 
+const First = 0
+
 func (m mockRobotStorage) Create(r *robot.Robot) error {
+	r.RobotID = m.rr[First].RobotID
 	return nil
 }
 
 func (m mockRobotStorage) FindByID(id int64) (*robot.Robot, error) {
-	return nil, nil
+	return m.rr[First], nil
 }
 
 func (m mockRobotStorage) FindByOwnerID(id int64) ([]*robot.Robot, error) {
-	return m.r, nil
+	return m.rr, nil
 }
 
 func (m mockRobotStorage) FindByTicker(ticker string) ([]*robot.Robot, error) {
@@ -60,7 +63,7 @@ func (m mockRobotStorage) FindByTicker(ticker string) ([]*robot.Robot, error) {
 }
 
 func (m mockRobotStorage) GetAll(id int64, ticker string) ([]*robot.Robot, error) {
-	return nil, nil
+	return m.rr, nil
 }
 
 func (m mockRobotStorage) Update(r *robot.Robot) error {
@@ -85,7 +88,7 @@ func (m mockSessionStorage) FindByID(id int64) (*session.Session, error) {
 }
 
 func (m mockSessionStorage) FindByToken(token string) (*session.Session, error) {
-	return nil, nil
+	return m.s, nil
 }
 
 type mockLogger struct {
@@ -683,7 +686,7 @@ func TestGetUserRobotsCorrect(t *testing.T) {
 
 	mockUserStorage.u = u
 	mockSessionStorage.s = s
-	mockRobotStorage.r = rbts
+	mockRobotStorage.rr = rbts
 
 	h, _ := New(l, mockUserStorage, mockSessionStorage, mockRobotStorage, hub)
 
@@ -745,7 +748,7 @@ func TestGetUserRobotsUserNotFound(t *testing.T) {
 
 	mockUserStorage.u = u
 	mockSessionStorage.s = s
-	mockRobotStorage.r = rbts
+	mockRobotStorage.rr = rbts
 
 	h, _ := New(l, mockUserStorage, mockSessionStorage, mockRobotStorage, hub)
 
@@ -806,7 +809,7 @@ func TestGetUserRobotsCheckTokens(t *testing.T) {
 
 	mockUserStorage.u = u
 	mockSessionStorage.s = s
-	mockRobotStorage.r = rbts
+	mockRobotStorage.rr = rbts
 
 	h, _ := New(l, mockUserStorage, mockSessionStorage, mockRobotStorage, hub)
 

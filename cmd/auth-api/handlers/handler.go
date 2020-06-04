@@ -69,33 +69,26 @@ func (h *Handler) Routes() chi.Router {
 		r.Put("/users/{id}", h.updateUser)
 		r.Get("/users/{id}", h.getUser)
 		r.Get("/users/{id}/robots", h.getUserRobots)
+
+		r.Post("/robot", h.createRobot)
+		r.Delete("/robot/{id}", h.deleteRobot)
+		r.Get("/robots", h.getRobots)
+		r.Put("/robot/{id}/favourite", h.makeFavourite)
+		r.Put("/robot/{id}/activate", h.activate)
+		r.Put("/robot/{id}/deactivate", h.deactivate)
+		r.Get("/robot/{id}", h.getRobot)
+		r.Put("/robot/{id}", h.updateRobot)
 	})
 	return r
 }
 
-//func (h *Handler) Routes() chi.Router {
-//	r := chi.NewRouter()
-//	r.Route("/api/v1", func(r chi.Router) {
-//		r.Post("/signup", rootHandler{h.signUp, h.logger}.ServeHTTP)
-//		r.Post("/signin", rootHandler{h.signIn, h.logger}.ServeHTTP)
-//		r.Put("/users/{id}", rootHandler{h.updateUser, h.logger}.ServeHTTP)
-//		r.Get("/users/{id}", rootHandler{h.getUser, h.logger}.ServeHTTP)
-//		r.Get("/users/{id}/robots", rootHandler{h.getUserRobots, h.logger}.ServeHTTP)
-//
-//		r.Post("/robot", rootHandler{h.createRobot, h.logger}.ServeHTTP)
-//		r.Delete("/robot/{id}", rootHandler{h.deleteRobot, h.logger}.ServeHTTP)
-//		r.Get("/robots", rootHandler{h.getRobots, h.logger}.ServeHTTP)
-//		r.Put("/robot/{id}/favourite", rootHandler{h.makeFavourite, h.logger}.ServeHTTP)
-//		r.Put("/robot/{id}/activate", rootHandler{h.activate, h.logger}.ServeHTTP)
-//		r.Put("/robot/{id}/deactivate", rootHandler{h.deactivate, h.logger}.ServeHTTP)
-//		r.Get("/robot/{id}", rootHandler{h.getRobot, h.logger}.ServeHTTP)
-//		r.Put("/robot/{id}", rootHandler{h.updateRobot, h.logger}.ServeHTTP)
+
 //	})
-//	r.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, r *http.Request) error {
-//		return socket.ServeWS(h.hub, w, r)
+//	rr.HandleFunc("/ws", rootHandler{func(w http.ResponseWriter, rr *http.Request) error {
+//		return socket.ServeWS(h.hub, w, rr)
 //	}, h.logger}.ServeHTTP)
 //
-//	return r
+//	return rr
 //}
 
 //type rootHandler struct {
@@ -103,8 +96,8 @@ func (h *Handler) Routes() chi.Router {
 //	logger logger.Logger
 //}
 //
-//func (fn rootHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	err := fn.H(w, r)
+//func (fn rootHandler) ServeHTTP(w http.ResponseWriter, rr *http.Request) {
+//	err := fn.H(w, rr)
 //	if err == nil {
 //		return
 //	}
