@@ -11,7 +11,7 @@ const (
 )
 
 type ErrorMsg struct {
-	Detail  string `json:"error"`
+	Detail string `json:"error"`
 }
 
 func HTTPError(msg string, status int, w http.ResponseWriter) {
@@ -23,6 +23,7 @@ func Error(msg ErrorMsg, status int, w http.ResponseWriter) {
 
 	if msg.Detail != "" {
 		w.Header().Add(ContentTypeHeader, JSONContentType)
+
 		out, err := json.Marshal(msg)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

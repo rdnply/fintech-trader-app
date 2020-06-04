@@ -7,10 +7,11 @@ import (
 	"cw1/internal/session"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) createRobot(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +95,7 @@ func (h *Handler) deleteRobot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+
 	go h.hub.Broadcast(rbtFromDB)
 }
 

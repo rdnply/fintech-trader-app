@@ -37,7 +37,6 @@ func (c *Client) work() {
 			c.logger.Infof("Stop client for robot with id: %v", c.r.RobotID)
 			return
 		}
-
 	}
 }
 

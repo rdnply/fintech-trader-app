@@ -8,11 +8,12 @@ import (
 	"cw1/internal/user"
 	"cw1/pkg/log/logger"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
 	"html/template"
 	"net/http"
 	"os"
+
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
 type Handler struct {
@@ -55,12 +56,12 @@ func parseTemplates() (map[string]*template.Template, error) {
 	var err error
 
 	_ = os.Chdir("./internal/templates")
+
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't get path")
 	}
 
-	fmt.Println(pwd)
 	tmplts["index"], err = template.New("index").Funcs(funcMap).
 		ParseFiles(fmt.Sprintf("%s/base.html", pwd), fmt.Sprintf("%s/index.html", pwd))
 	if err != nil {
@@ -82,7 +83,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Post("/robot", h.createRobot)
 		r.Delete("/robot/{id}", h.deleteRobot)
 		r.Get("/robots", h.getRobots)
-		r.Put("/robot/{id}/favourite", h.makeFavourite)
+		r.Put("/robot/{id}/favourite", h.makeFavourite) //nolint: misspell
 		r.Put("/robot/{id}/activate", h.activate)
 		r.Put("/robot/{id}/deactivate", h.deactivate)
 		r.Get("/robot/{id}", h.getRobot)

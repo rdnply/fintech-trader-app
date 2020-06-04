@@ -10,14 +10,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"io"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const BottomLineValidID = 0
@@ -254,8 +255,10 @@ func initUser(u *user.User, id int64) error {
 
 func IDFromParams(r *http.Request) (int64, error) {
 	const IDIndex = 4 // space in first place
+
 	str := r.URL.String()
 	params := strings.Split(str, "/")
+
 	id, err := strconv.ParseInt(params[IDIndex], 10, 64)
 	if err != nil {
 		return -1, errors.Wrap(err, "can't parse string to int for get id from params")
@@ -353,7 +356,7 @@ func (h *Handler) getUserRobots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if token != s.SessionID {
-		h.logger.Errorf("incorrect token", )
+		h.logger.Errorf("incorrect token")
 		msg := fmt.Sprintf("tokens don't match")
 		render.HTTPError(msg, http.StatusBadRequest, w)
 		return
